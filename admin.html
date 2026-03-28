@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>LHS MEN | Painel ADM</title>
+  <link rel="stylesheet" href="admin.css" />
+</head>
+
+<body>
+  <div class="admin-layout">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-box">LHS</div>
+        <div>
+          <h1>MEN</h1>
+          <p>Painel ADM</p>
+        </div>
+      </div>
+
+      <nav class="sidebar-nav">
+        <a href="#dashboard" class="active">Dashboard</a>
+        <a href="#produtos">Produtos</a>
+        <a href="#cadastro">Cadastrar produto</a>
+      </nav>
+    </aside>
+
+    <main class="content">
+      <header class="topbar">
+        <div>
+          <h2>Painel administrativo</h2>
+          <p>Gerencie produtos, preços, promoções e imagens da LHS MEN.</p>
+        </div>
+        <button class="logout-btn" id="resetAllBtn">Limpar tudo</button>
+      </header>
+
+      <section class="stats" id="dashboard">
+        <div class="stat-card">
+          <span>Total de produtos</span>
+          <strong id="totalProducts">0</strong>
+        </div>
+        <div class="stat-card">
+          <span>Em destaque</span>
+          <strong id="totalFeatured">0</strong>
+        </div>
+        <div class="stat-card">
+          <span>Mais vendidos</span>
+          <strong id="totalBestsellers">0</strong>
+        </div>
+        <div class="stat-card">
+          <span>Em promoção</span>
+          <strong id="totalSales">0</strong>
+        </div>
+      </section>
+
+      <section class="panel" id="cadastro">
+        <div class="panel-header">
+          <h3 id="formTitle">Cadastrar novo produto</h3>
+        </div>
+
+        <form id="productForm" class="product-form">
+          <input type="hidden" id="productId" />
+
+          <div class="grid two">
+            <div class="input-group">
+              <label>Nome do produto</label>
+              <input type="text" id="name" placeholder="Ex: Essential Black Tee" required />
+            </div>
+
+            <div class="input-group">
+              <label>Categoria</label>
+              <select id="category" required>
+                <option value="">Selecione</option>
+                <option value="camisetas">Camisetas</option>
+                <option value="calcas">Calças</option>
+                <option value="bermudas">Bermudas</option>
+                <option value="jaquetas">Jaquetas</option>
+                <option value="acessorios">Acessórios</option>
+                <option value="tenis">Tênis</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="grid two">
+            <div class="input-group">
+              <label>Preço atual</label>
+              <input type="number" id="price" step="0.01" placeholder="119.90" required />
+            </div>
+
+            <div class="input-group">
+              <label>Preço antigo</label>
+              <input type="number" id="oldPrice" step="0.01" placeholder="149.90" />
+            </div>
+          </div>
+
+          <div class="grid two">
+            <div class="input-group">
+              <label>Selo da promoção</label>
+              <input type="text" id="sale" placeholder="Ex: -20%" />
+            </div>
+
+            <div class="input-group">
+              <label for="imageFile">Selecionar imagem</label>
+              <input type="file" id="imageFile" />
+              <input type="hidden" id="image" />
+            </div>
+
+            <div class="input-group">
+              <label>Descrição</label>
+              <textarea id="description" rows="4" placeholder="Descreva o produto..."></textarea>
+            </div>
+
+            <div class="grid checks">
+              <label class="check-item">
+                <input type="checkbox" id="featured" />
+                <span>Produto em destaque</span>
+              </label>
+
+              <label class="check-item">
+                <input type="checkbox" id="bestseller" />
+                <span>Mais vendido</span>
+              </label>
+            </div>
+
+            <div class="preview-box">
+              <p>Prévia da imagem</p>
+              <div class="image-preview" id="imagePreview">Sem imagem</div>
+            </div>
+
+            <div class="form-actions">
+              <button type="submit" class="primary-btn">Salvar produto</button>
+              <button type="button" class="secondary-btn" id="cancelEditBtn">Cancelar edição</button>
+            </div>
+        </form>
+      </section>
+
+      <section class="panel" id="produtos">
+        <div class="panel-header">
+          <h3>Produtos cadastrados</h3>
+        </div>
+
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Imagem</th>
+                <th>Nome</th>
+                <th>Categoria</th>
+                <th>Preço</th>
+                <th>Promoção</th>
+                <th>Destaque</th>
+                <th>Mais vendido</th>
+                <th>Ações</th>
+              </tr>
+            </thead>
+            <tbody id="productTableBody"></tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script src="admin.js"></script>
+</body>
+
+</html>
