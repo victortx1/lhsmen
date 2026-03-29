@@ -461,17 +461,18 @@
           </div>
 
           <div class="profile-actions">
-            <a href="index.html" class="btn btn-outline">Voltar para a loja</a>
-            <button id="logoutBtn" class="btn btn-primary" type="button">Sair da conta</button>
+            <a href="index.html" class="btn btn-primary">Voltar para a loja</a>
+            <button id="logoutBtn" class="btn btn-outline" type="button">Sair da conta</button>
           </div>
         </aside>
 
         <div class="content-column">
           <section class="card welcome-card">
-            <p class="eyebrow">área do cliente</p>
-            <h1>Seu perfil LHS MEN</h1>
+            <div class="eyebrow">minha conta</div>
+            <h1>Seu perfil na LHS MEN</h1>
             <p>
-              Aqui você poderá acompanhar sua conta, seus favoritos, carrinho, pedidos e futuras atualizações da loja.
+              Acompanhe seus favoritos, visualize o resumo do carrinho e mantenha sua
+              experiência conectada em qualquer dispositivo.
             </p>
           </section>
 
@@ -547,6 +548,9 @@
     const favoriteList = document.getElementById("favoriteList");
     const cartList = document.getElementById("cartList");
 
+    const FAVORITES_KEY = "lhsmen_favorites";
+    const CART_KEY = "lhsmen_cart";
+
     function getInitials(name = "") {
       const parts = name.trim().split(" ").filter(Boolean);
       if (!parts.length) return "L";
@@ -564,140 +568,119 @@
       }
     }
 
-    function readFirstAvailableArray(keys = []) {
-      for (const key of keys) {
-        const value = readLocalArray(key);
-        if (Array.isArray(value) && value.length) {
-          return value;
-        }
-      }
-      return [];
-    }
-
     function formatPrice(value) {
-      return Number(value || 0).toLocaleString("pt-BR", {
+      const number = Number(value || 0);
+      return number.toLocaleString("pt-BR", {
         style: "currency",
         currency: "BRL"
       });
     }
 
-    function renderSimpleList(container, items, emptyText, type) {
+    function renderMiniList(container, items, emptyMessage, type = "generic") {
+      if (!container) return;
+
       if (!items.length) {
-        container.innerHTML = `<div class="empty-state">${emptyText}</div>`;
+        container.innerHTML = `<div class="empty-state">${emptyMessage}</div>`;
         return;
       }
 
       container.innerHTML = items.map((item) => {
-        const name = item.name || item.title || item.nome || "Produto";
-        const quantity = item.quantity || item.qty || 1;
-        const priceValue = Number(item.price || item.valor || 0);
+        const name = item?.name || item?.title || "Produto";
+        const description = item?.description || "Item salvo na sua conta.";
+        const price = item?.price ? `<p><strong>${formatPrice(item.price)}</strong></p>` : "";
 
-        const description =
-          type === "cart"
-            ? `Quantidade: ${quantity}${priceValue ? ` • ${formatPrice(priceValue)}` : ""}`
-            : "Produto salvo na sua conta.";
+        if (type === "cart") {
+          const quantity = Number(item?.quantity || 1);
+          return `
+            <div class="mini-item">
+              <strong>${name}</strong>
+              <p>${description}</p>
+              <p>Quantidade: ${quantity}</p>
+              ${price}
+            </div>
+          `;
+        }
 
         return `
-          <article class="mini-item">
+          <div class="mini-item">
             <strong>${name}</strong>
             <p>${description}</p>
-          </article>
+            ${price}
+          </div>
         `;
       }).join("");
     }
 
-    function showPlaceholder(name = "LHS") {
-      profilePhoto.style.display = "none";
-      profilePhoto.removeAttribute("src");
-      profilePlaceholder.textContent = getInitials(name);
-      profilePlaceholder.style.display = "flex";
+    function showLoggedOutState() {
+      profilePage.style.display = "none";
+      loginRequired.style.display = "flex";
     }
 
-    async function initProfile() {
-      try {
-        await setPersistence(auth, browserLocalPersistence);
-      } catch (error) {
-        console.error("Erro ao aplicar persistência:", error);
+    function showLoggedState(user) {
+      profilePage.style.display = "block";
+      loginRequired.style.display = "none";
+
+      const displayName = user.displayName || "Cliente LHS MEN";
+      const email = user.email || "Sem e-mail";
+      const photoURL = user.photoURL;
+
+      profileName.textContent = displayName;
+      profileEmail.textContent = email;
+
+      if (photoURL) {
+        profilePhoto.src = photoURL;
+        profilePhoto.style.display = "block";
+        profilePlaceholder.style.display = "none";
+      } else {
+        profilePhoto.style.display = "none";
+        profilePlaceholder.textContent = getInitials(displayName);
+        profilePlaceholder.style.display = "flex";
       }
 
-      onAuthStateChanged(auth, (user) => {
-        if (!user) {
-          profilePage.style.display = "none";
-          loginRequired.style.display = "flex";
-          return;
-        }
+      const favorites = readLocalArray(FAVORITES_KEY);
+      const cart = readLocalArray(CART_KEY);
 
-        profilePage.style.display = "block";
-        loginRequired.style.display = "none";
+      favoriteTotal.textContent = favorites.length;
+      cartTotalItems.textContent = cart.reduce((acc, item) => acc + Number(item?.quantity || 1), 0);
 
-        const userName = user.displayName || "Cliente LHS MEN";
-        const userEmail = user.email || "Sem email";
+      renderMiniList(
+        favoriteList,
+        favorites,
+        "Nenhum favorito salvo ainda.",
+        "favorites"
+      );
 
-        profileName.textContent = userName;
-        profileEmail.textContent = userEmail;
-
-        if (user.photoURL) {
-          profilePhoto.src = user.photoURL;
-          profilePhoto.style.display = "block";
-          profilePlaceholder.style.display = "none";
-        } else {
-          showPlaceholder(userName);
-        }
-
-        const favorites = readFirstAvailableArray([
-          "lhsmen_favorites",
-          "favorites",
-          "lhsmenFavorites",
-          "favoritos"
-        ]);
-
-        const cart = readFirstAvailableArray([
-          "lhsmen_cart",
-          "cart",
-          "lhsmenCart",
-          "carrinho"
-        ]);
-
-        favoriteTotal.textContent = favorites.length;
-        cartTotalItems.textContent = cart.reduce(
-          (acc, item) => acc + (item.quantity || item.qty || 1),
-          0
-        );
-
-        renderSimpleList(
-          favoriteList,
-          favorites,
-          "Nenhum favorito salvo ainda.",
-          "favorite"
-        );
-
-        renderSimpleList(
-          cartList,
-          cart,
-          "Seu carrinho está vazio no momento.",
-          "cart"
-        );
-      });
+      renderMiniList(
+        cartList,
+        cart,
+        "Seu carrinho está vazio no momento.",
+        "cart"
+      );
     }
 
-    profilePhoto?.addEventListener("error", () => {
-      showPlaceholder(profileName.textContent || "LHS");
-    });
-
     logoutBtn?.addEventListener("click", async () => {
-      const sair = confirm("Deseja sair da conta?");
-      if (!sair) return;
-
       try {
         await signOut(auth);
         window.location.href = "index.html";
       } catch (error) {
-        console.error("Erro ao sair:", error);
+        console.error("Erro ao sair da conta:", error);
         alert("Não foi possível sair da conta.");
       }
     });
 
-    initProfile();
+    try {
+      await setPersistence(auth, browserLocalPersistence);
+    } catch (error) {
+      console.error("Erro ao definir persistência:", error);
+    }
+
+    onAuthStateChanged(auth, (user) => {
+      if (user) {
+        showLoggedState(user);
+      } else {
+        showLoggedOutState();
+      }
+    });
   </script>
 </body>
 </html>

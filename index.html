@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>LHS MEN | Moda Masculina</title>
-  <link rel="icon" type="image/png" href="./fotos/lhs.png">
+  <link rel="icon" type="image/png" href="./fotos/lhs.png" />
   <meta
     name="description"
     content="LHS MEN - Loja masculina premium com estilo luxuoso, moderno e streetwear sofisticado."
@@ -157,14 +157,14 @@
 
     <section class="marquee">
       <div class="marquee-track">
-        <span>SEM NADA</span>
-        <span>SEM NADA</span>
-        <span>SEM NADA</span>
-        <span>SEM NADA</span>
-        <span>SEM NADA</span>
-        <span>SEM NADA</span>
-        <span>SEM NADA</span>
-        <span>SEM NADA</span>
+        <span>MODA PREMIUM</span>
+        <span>ESTILO MASCULINO</span>
+        <span>PRESENÇA</span>
+        <span>SOFISTICAÇÃO</span>
+        <span>LHS MEN</span>
+        <span>MODA PREMIUM</span>
+        <span>ESTILO MASCULINO</span>
+        <span>PRESENÇA</span>
       </div>
     </section>
 
@@ -178,19 +178,19 @@
         <div class="launch-grid">
           <article class="launch-card reveal">
             <span class="chip">Drop 01</span>
-            <h3>SEM NADA</h3>
+            <h3>Camiseta Essential Black</h3>
             <p>Modelagem premium, toque macio e visual limpo para qualquer ocasião.</p>
           </article>
 
           <article class="launch-card reveal delay-1">
             <span class="chip">Drop 02</span>
-            <h3>SEM NADA</h3>
+            <h3>Calça Urban Fit</h3>
             <p>Calça com corte elegante e estética urbana sofisticada.</p>
           </article>
 
           <article class="launch-card reveal delay-2">
             <span class="chip">Drop 03</span>
-            <h3>SEM NADA</h3>
+            <h3>Jaqueta Signature</h3>
             <p>Jaqueta com textura premium e presença forte para compor looks de alto nível.</p>
           </article>
         </div>
@@ -594,217 +594,214 @@
 
   <script type="module" src="script.js"></script>
 
-<script type="module">
-  import { auth } from "./firebase.js";
-  import {
-    GoogleAuthProvider,
-    signInWithPopup,
-    signInWithRedirect,
-    getRedirectResult,
-    onAuthStateChanged,
-    setPersistence,
-    browserLocalPersistence
-  } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+  <script type="module">
+    import { auth } from "./firebase.js";
+    import {
+      GoogleAuthProvider,
+      signInWithPopup,
+      signInWithRedirect,
+      getRedirectResult,
+      onAuthStateChanged,
+      setPersistence,
+      browserLocalPersistence
+    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
-  const OWNER_EMAILS = ["victoj796@gmail.com"];
-  const provider = new GoogleAuthProvider();
-  const WELCOME_POPUP_KEY = "lhsmen_welcome_popup_seen";
+    const OWNER_EMAILS = ["victoj796@gmail.com"];
+    const provider = new GoogleAuthProvider();
+    const WELCOME_POPUP_KEY = "lhsmen_welcome_popup_seen";
 
-  const googleLoginArea = document.getElementById("googleLoginArea");
-  const loginToggle = document.getElementById("loginToggle");
-  const profileIcon = document.getElementById("profileIcon");
-  const mobileLoginToggle = document.getElementById("mobileLoginToggle");
-  const loginPanel = document.getElementById("loginPanel");
-  const overlay = document.getElementById("overlay");
-  const adminLink = document.getElementById("adminLink");
-  const mobileNav = document.getElementById("mobileNav");
+    const googleLoginArea = document.getElementById("googleLoginArea");
+    const loginToggle = document.getElementById("loginToggle");
+    const profileIcon = document.getElementById("profileIcon");
+    const mobileLoginToggle = document.getElementById("mobileLoginToggle");
+    const loginPanel = document.getElementById("loginPanel");
+    const overlay = document.getElementById("overlay");
+    const adminLink = document.getElementById("adminLink");
+    const mobileNav = document.getElementById("mobileNav");
 
-  const welcomePopup = document.getElementById("welcomePopup");
-  const closeWelcomePopup = document.getElementById("closeWelcomePopup");
-  const welcomeLaterBtn = document.getElementById("welcomeLaterBtn");
-  const welcomeGoogleBtn = document.getElementById("welcomeGoogleBtn");
+    const welcomePopup = document.getElementById("welcomePopup");
+    const closeWelcomePopup = document.getElementById("closeWelcomePopup");
+    const welcomeLaterBtn = document.getElementById("welcomeLaterBtn");
+    const welcomeGoogleBtn = document.getElementById("welcomeGoogleBtn");
 
-  function isMobileDevice() {
-    return /Android|iPhone|iPad|iPod|Opera Mini|IEMobile|WPDesktop/i.test(navigator.userAgent)
-      || window.innerWidth <= 768;
-  }
+    function isMobileDevice() {
+      return /Android|iPhone|iPad|iPod|Opera Mini|IEMobile|WPDesktop/i.test(navigator.userAgent)
+        || window.innerWidth <= 768;
+    }
 
-  function fecharPainelLogin() {
-    if (loginPanel) loginPanel.classList.remove("open");
-    if (overlay) overlay.classList.remove("show");
-    if (mobileNav) mobileNav.classList.remove("open");
-    document.body.classList.remove("panel-open");
-  }
+    function fecharPainelLogin() {
+      loginPanel?.classList.remove("open");
+      overlay?.classList.remove("show");
+      mobileNav?.classList.remove("open");
+      document.body.classList.remove("panel-open");
+    }
 
-  function abrirPainelLogin() {
-    if (loginPanel) loginPanel.classList.add("open");
-    if (overlay) overlay.classList.add("show");
-    document.body.classList.add("panel-open");
-  }
+    function abrirPainelLogin() {
+      loginPanel?.classList.add("open");
+      overlay?.classList.add("show");
+      mobileNav?.classList.remove("open");
+      document.body.classList.add("panel-open");
+    }
 
-  function irParaPerfil() {
-    window.location.href = "perfil.html";
-  }
+    function irParaPerfil() {
+      window.location.href = "perfil.html";
+    }
 
-  function mostrarWelcomePopup() {
-    if (welcomePopup) {
+    function mostrarWelcomePopup() {
+      if (!welcomePopup) return;
       welcomePopup.classList.add("show");
       document.body.classList.add("panel-open");
     }
-  }
 
-  function fecharWelcomePopup(salvar = true) {
-    if (welcomePopup) {
-      welcomePopup.classList.remove("show");
-    }
+    function fecharWelcomePopup(salvar = true) {
+      welcomePopup?.classList.remove("show");
+      document.body.classList.remove("panel-open");
 
-    document.body.classList.remove("panel-open");
-
-    if (salvar) {
-      localStorage.setItem(WELCOME_POPUP_KEY, "true");
-    }
-  }
-
-  function setLoggedUI(user) {
-    const nome = user.displayName || "Minha conta";
-    const email = (user.email || "").toLowerCase();
-    const foto = user.photoURL;
-    const isOwner = OWNER_EMAILS.includes(email);
-
-    if (loginToggle) {
-      loginToggle.setAttribute("data-logged", "true");
-      loginToggle.setAttribute("title", nome);
-    }
-
-    if (mobileLoginToggle) {
-      mobileLoginToggle.textContent = nome;
-      mobileLoginToggle.setAttribute("data-logged", "true");
-    }
-
-    if (profileIcon) {
-      if (foto) {
-        profileIcon.innerHTML = `<img src="${foto}" alt="${nome}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`;
-      } else {
-        profileIcon.textContent = nome.charAt(0).toUpperCase();
+      if (salvar) {
+        localStorage.setItem(WELCOME_POPUP_KEY, "true");
       }
     }
 
-    if (adminLink) {
-      adminLink.style.display = isOwner ? "inline-block" : "inline-block";
+    function setLoggedUI(user) {
+      const nome = user?.displayName || "Minha conta";
+      const email = (user?.email || "").toLowerCase();
+      const foto = user?.photoURL;
+      const isOwner = OWNER_EMAILS.includes(email);
+
+      if (loginToggle) {
+        loginToggle.setAttribute("data-logged", "true");
+        loginToggle.setAttribute("title", nome);
+      }
+
+      if (mobileLoginToggle) {
+        mobileLoginToggle.textContent = nome;
+        mobileLoginToggle.setAttribute("data-logged", "true");
+      }
+
+      if (profileIcon) {
+        if (foto) {
+          profileIcon.innerHTML = `<img src="${foto}" alt="${nome}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`;
+        } else {
+          profileIcon.textContent = nome.charAt(0).toUpperCase();
+        }
+      }
+
+      if (adminLink) {
+        adminLink.style.display = isOwner ? "inline-block" : "none";
+      }
+
+      localStorage.setItem(WELCOME_POPUP_KEY, "true");
+      fecharWelcomePopup(false);
+      fecharPainelLogin();
     }
 
-    localStorage.setItem(WELCOME_POPUP_KEY, "true");
-    fecharWelcomePopup(false);
-    fecharPainelLogin();
-  }
+    function setLoggedOutUI() {
+      if (loginToggle) {
+        loginToggle.removeAttribute("data-logged");
+        loginToggle.setAttribute("title", "Entrar");
+      }
 
-  function setLoggedOutUI() {
-    if (loginToggle) {
-      loginToggle.removeAttribute("data-logged");
-      loginToggle.setAttribute("title", "Entrar");
+      if (mobileLoginToggle) {
+        mobileLoginToggle.textContent = "Entrar";
+        mobileLoginToggle.removeAttribute("data-logged");
+      }
+
+      if (profileIcon) {
+        profileIcon.textContent = "👤";
+      }
+
+      if (adminLink) {
+        adminLink.style.display = "none";
+      }
+
+      const jaViuPopup = localStorage.getItem(WELCOME_POPUP_KEY);
+
+      if (!jaViuPopup) {
+        setTimeout(() => {
+          mostrarWelcomePopup();
+        }, 900);
+      }
     }
 
-    if (mobileLoginToggle) {
-      mobileLoginToggle.textContent = "Entrar";
-      mobileLoginToggle.removeAttribute("data-logged");
+    async function entrarComGoogle() {
+      try {
+        await setPersistence(auth, browserLocalPersistence);
+        localStorage.setItem(WELCOME_POPUP_KEY, "true");
+
+        if (isMobileDevice()) {
+          await signInWithRedirect(auth, provider);
+          return;
+        }
+
+        const result = await signInWithPopup(auth, provider);
+        if (result?.user) {
+          setLoggedUI(result.user);
+        }
+      } catch (error) {
+        console.error("Erro no login com Google:", error);
+        alert("Não foi possível entrar com Google.");
+      }
     }
 
-    if (profileIcon) {
-      profileIcon.textContent = "👤";
+    if (googleLoginArea) {
+      googleLoginArea.innerHTML = "";
+      const btnGoogle = document.createElement("button");
+      btnGoogle.innerText = "Entrar com Google";
+      btnGoogle.className = "btn btn-light full";
+      btnGoogle.type = "button";
+      btnGoogle.addEventListener("click", entrarComGoogle);
+      googleLoginArea.appendChild(btnGoogle);
     }
 
-    if (adminLink) {
-      adminLink.style.display = "none";
-    }
+    welcomeGoogleBtn?.addEventListener("click", entrarComGoogle);
 
-    const jaViuPopup = localStorage.getItem(WELCOME_POPUP_KEY);
+    closeWelcomePopup?.addEventListener("click", () => {
+      fecharWelcomePopup(true);
+    });
 
-    if (!jaViuPopup) {
-      setTimeout(() => {
-        mostrarWelcomePopup();
-      }, 900);
-    }
-  }
+    welcomeLaterBtn?.addEventListener("click", () => {
+      fecharWelcomePopup(true);
+    });
 
-  async function entrarComGoogle() {
+    loginToggle?.addEventListener("click", () => {
+      const isLogged = loginToggle.getAttribute("data-logged");
+      if (isLogged) {
+        irParaPerfil();
+      } else {
+        abrirPainelLogin();
+      }
+    });
+
+    mobileLoginToggle?.addEventListener("click", () => {
+      const isLogged = mobileLoginToggle.getAttribute("data-logged");
+      if (isLogged) {
+        irParaPerfil();
+      } else {
+        abrirPainelLogin();
+      }
+    });
+
     try {
       await setPersistence(auth, browserLocalPersistence);
-      localStorage.setItem(WELCOME_POPUP_KEY, "true");
 
-      if (isMobileDevice()) {
-        await signInWithRedirect(auth, provider);
-        return;
-      }
-
-      const result = await signInWithPopup(auth, provider);
-      if (result?.user) {
-        setLoggedUI(result.user);
+      const redirectResult = await getRedirectResult(auth);
+      if (redirectResult?.user) {
+        setLoggedUI(redirectResult.user);
       }
     } catch (error) {
-      console.error("Erro no login com Google:", error);
-      alert("Não foi possível entrar com Google.");
+      console.error("Erro no retorno do login com Google:", error);
     }
-  }
 
-  if (googleLoginArea) {
-    googleLoginArea.innerHTML = "";
-    const btnGoogle = document.createElement("button");
-    btnGoogle.innerText = "Entrar com Google";
-    btnGoogle.className = "btn btn-light full";
-    btnGoogle.type = "button";
-    btnGoogle.addEventListener("click", entrarComGoogle);
-    googleLoginArea.appendChild(btnGoogle);
-  }
+    onAuthStateChanged(auth, (user) => {
+      if (user) {
+        setLoggedUI(user);
+      } else {
+        setLoggedOutUI();
+      }
+    });
 
-  welcomeGoogleBtn?.addEventListener("click", entrarComGoogle);
-
-  closeWelcomePopup?.addEventListener("click", () => {
-    fecharWelcomePopup(true);
-  });
-
-  welcomeLaterBtn?.addEventListener("click", () => {
-    fecharWelcomePopup(true);
-  });
-
-  loginToggle?.addEventListener("click", () => {
-    const isLogged = loginToggle.getAttribute("data-logged");
-    if (isLogged) {
-      irParaPerfil();
-    } else {
-      abrirPainelLogin();
-    }
-  });
-
-  mobileLoginToggle?.addEventListener("click", () => {
-    const isLogged = mobileLoginToggle.getAttribute("data-logged");
-    if (isLogged) {
-      irParaPerfil();
-    } else {
-      abrirPainelLogin();
-    }
-  });
-
-  try {
-    await setPersistence(auth, browserLocalPersistence);
-
-    const redirectResult = await getRedirectResult(auth);
-    if (redirectResult?.user) {
-      setLoggedUI(redirectResult.user);
-    }
-  } catch (error) {
-    console.error("Erro no retorno do login com Google:", error);
-  }
-
-  onAuthStateChanged(auth, (user) => {
-    if (user) {
-      setLoggedUI(user);
-    } else {
-      setLoggedOutUI();
-    }
-  });
-
-  window.firebaseAuth = auth;
-  window.firebaseUser = () => auth.currentUser;
-</script>
+    window.firebaseAuth = auth;
+    window.firebaseUser = () => auth.currentUser;
+  </script>
 </body>
 </html>
