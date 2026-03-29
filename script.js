@@ -7,12 +7,15 @@ import {
 import {
   loginWithGoogle,
   handleRedirectLogin,
-  monitorAuth
+  monitorAuth,
+  prepareAuth
 } from "./auth.js";
 
 const STORAGE_KEY = "lhsmen_products";
 const CART_KEY = "lhsmen_cart";
 const FAVORITES_KEY = "lhsmen_favorites";
+const WELCOME_POPUP_KEY = "lhsmen_welcome_popup_seen";
+const OWNER_EMAILS = ["victoj796@gmail.com"];
 
 const defaultProducts = [
   {
@@ -215,6 +218,18 @@ const cartCount = document.getElementById("cartCount");
 const favoriteCount = document.getElementById("favoriteCount");
 const cartTotal = document.getElementById("cartTotal");
 const overlay = document.getElementById("overlay");
+
+const loginToggle = document.getElementById("loginToggle");
+const profileIcon = document.getElementById("profileIcon");
+const mobileLoginToggle = document.getElementById("mobileLoginToggle");
+const adminLink = document.getElementById("adminLink");
+const mobileNav = document.getElementById("mobileNav");
+const loginPanel = document.getElementById("loginPanel");
+const googleLoginArea = document.getElementById("googleLoginArea");
+const welcomePopup = document.getElementById("welcomePopup");
+const closeWelcomePopup = document.getElementById("closeWelcomePopup");
+const welcomeLaterBtn = document.getElementById("welcomeLaterBtn");
+const welcomeGoogleBtn = document.getElementById("welcomeGoogleBtn");
 
 function saveCart() {
   saveArray(CART_KEY, state.cart);
@@ -492,6 +507,161 @@ function closePanels() {
   document.body.classList.remove("panel-open");
 }
 
+function abrirPainelLogin() {
+  openPanel("loginPanel");
+  mobileNav?.classList.remove("open");
+}
+
+function fecharPainelLogin() {
+  closePanels();
+  mobileNav?.classList.remove("open");
+}
+
+function irParaPerfil() {
+  window.location.href = "perfil.html";
+}
+
+function mostrarWelcomePopup() {
+  if (!welcomePopup) return;
+  welcomePopup.classList.add("show");
+  document.body.classList.add("panel-open");
+}
+
+function fecharWelcomePopup(salvar = true) {
+  welcomePopup?.classList.remove("show");
+  document.body.classList.remove("panel-open");
+
+  if (salvar) {
+    localStorage.setItem(WELCOME_POPUP_KEY, "true");
+  }
+}
+
+function setLoggedUI(user) {
+  const nome = user?.displayName || "Minha conta";
+  const email = (user?.email || "").toLowerCase();
+  const foto = user?.photoURL;
+  const isOwner = OWNER_EMAILS.includes(email);
+
+  if (loginToggle) {
+    loginToggle.setAttribute("data-logged", "true");
+    loginToggle.setAttribute("title", nome);
+  }
+
+  if (mobileLoginToggle) {
+    mobileLoginToggle.textContent = nome;
+    mobileLoginToggle.setAttribute("data-logged", "true");
+  }
+
+  if (profileIcon) {
+    if (foto) {
+      profileIcon.innerHTML = `<img src="${foto}" alt="${nome}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`;
+    } else {
+      profileIcon.textContent = nome.charAt(0).toUpperCase();
+    }
+  }
+
+  if (adminLink) {
+    adminLink.style.display = isOwner ? "inline-block" : "none";
+  }
+
+  localStorage.setItem(WELCOME_POPUP_KEY, "true");
+  fecharWelcomePopup(false);
+  fecharPainelLogin();
+}
+
+function setLoggedOutUI() {
+  if (loginToggle) {
+    loginToggle.removeAttribute("data-logged");
+    loginToggle.setAttribute("title", "Entrar");
+  }
+
+  if (mobileLoginToggle) {
+    mobileLoginToggle.textContent = "Entrar";
+    mobileLoginToggle.removeAttribute("data-logged");
+  }
+
+  if (profileIcon) {
+    profileIcon.textContent = "👤";
+  }
+
+  if (adminLink) {
+    adminLink.style.display = "none";
+  }
+
+  const jaViuPopup = localStorage.getItem(WELCOME_POPUP_KEY);
+
+  if (!jaViuPopup) {
+    setTimeout(() => {
+      mostrarWelcomePopup();
+    }, 900);
+  }
+}
+
+function revealOnScroll() {
+  const elements = document.querySelectorAll(".reveal");
+
+  elements.forEach((el) => {
+    const top = el.getBoundingClientRect().top;
+    const isVisible = top < window.innerHeight - 80;
+
+    if (isVisible) {
+      el.classList.add("visible");
+    }
+  });
+}
+
+function normalizeProduct(raw, fallbackId = Date.now()) {
+  return {
+    id: Number(raw.id ?? fallbackId),
+    name: raw.name || "Produto sem nome",
+    category: raw.category || "camisetas",
+    price: Number(raw.price || 0),
+    oldPrice: raw.oldPrice !== undefined && raw.oldPrice !== null && raw.oldPrice !== ""
+      ? Number(raw.oldPrice)
+      : null,
+    sale: raw.sale || "",
+    description: raw.description || "Peça premium com visual sofisticado, masculino e contemporâneo.",
+    image: raw.image || "",
+    featured: Boolean(raw.featured),
+    bestseller: Boolean(raw.bestseller)
+  };
+}
+
+function listenProductsFromFirestore() {
+  try {
+    onSnapshot(
+      collection(db, "produtos"),
+      (snapshot) => {
+        if (snapshot.empty) {
+          products = loadProductsFromLocal();
+        } else {
+          const firestoreProducts = snapshot.docs
+            .map((docSnap, index) => normalizeProduct(docSnap.data(), index + 1))
+            .sort((a, b) => b.id - a.id);
+
+          products = firestoreProducts;
+          saveProducts(products);
+        }
+
+        renderProducts();
+        renderBestSellers();
+        revealOnScroll();
+      },
+      (error) => {
+        console.error("Erro ao ouvir produtos do Firestore:", error);
+        products = loadProductsFromLocal();
+        renderProducts();
+        renderBestSellers();
+      }
+    );
+  } catch (error) {
+    console.error("Erro ao iniciar listener do Firestore:", error);
+    products = loadProductsFromLocal();
+    renderProducts();
+    renderBestSellers();
+  }
+}
+
 document.getElementById("cartToggle")?.addEventListener("click", () => {
   openPanel("cartPanel");
 });
@@ -500,11 +670,14 @@ document.getElementById("favoritesToggle")?.addEventListener("click", () => {
   openPanel("favoritesPanel");
 });
 
-document.querySelectorAll("[data-close]")?.forEach((button) => {
+document.querySelectorAll("[data-close]").forEach((button) => {
   button.addEventListener("click", closePanels);
 });
 
-overlay?.addEventListener("click", closePanels);
+overlay?.addEventListener("click", () => {
+  closePanels();
+  fecharWelcomePopup(false);
+});
 
 document.getElementById("searchToggle")?.addEventListener("click", () => {
   document.getElementById("searchBar")?.classList.toggle("open");
@@ -512,31 +685,6 @@ document.getElementById("searchToggle")?.addEventListener("click", () => {
 
 document.getElementById("menuToggle")?.addEventListener("click", () => {
   document.getElementById("mobileNav")?.classList.toggle("open");
-});
-
-document.getElementById("googleLoginBtn")?.addEventListener("click", async () => {
-  await loginWithGoogle();
-});
-
-document.getElementById("loginToggle")?.addEventListener("click", async () => {
-  const isLogged = document.getElementById("loginToggle")?.getAttribute("data-logged");
-
-  if (!isLogged) {
-    await loginWithGoogle();
-  } else {
-    window.location.href = "perfil.html";
-  }
-});
-
-document.getElementById("mobileLoginToggle")?.addEventListener("click", async () => {
-  const isLogged = document.getElementById("loginToggle")?.getAttribute("data-logged");
-
-  if (!isLogged) {
-    document.getElementById("mobileNav")?.classList.remove("open");
-    await loginWithGoogle();
-  } else {
-    window.location.href = "perfil.html";
-  }
 });
 
 document.getElementById("searchInput")?.addEventListener("input", (e) => {
@@ -547,7 +695,6 @@ document.getElementById("searchInput")?.addEventListener("input", (e) => {
 document.getElementById("clearSearch")?.addEventListener("click", () => {
   const searchInput = document.getElementById("searchInput");
   if (searchInput) searchInput.value = "";
-
   state.search = "";
   renderProducts();
 });
@@ -604,17 +751,45 @@ document.querySelectorAll(".add-look").forEach((button) => {
   });
 });
 
-function revealOnScroll() {
-  const elements = document.querySelectorAll(".reveal");
+loginToggle?.addEventListener("click", async () => {
+  const isLogged = loginToggle.getAttribute("data-logged");
 
-  elements.forEach((el) => {
-    const top = el.getBoundingClientRect().top;
-    const isVisible = top < window.innerHeight - 80;
+  if (isLogged) {
+    irParaPerfil();
+  } else {
+    abrirPainelLogin();
+  }
+});
 
-    if (isVisible) {
-      el.classList.add("visible");
-    }
+mobileLoginToggle?.addEventListener("click", async () => {
+  const isLogged = mobileLoginToggle.getAttribute("data-logged");
+
+  if (isLogged) {
+    irParaPerfil();
+  } else {
+    abrirPainelLogin();
+  }
+});
+
+function bindGoogleButtons() {
+  if (googleLoginArea) {
+    googleLoginArea.innerHTML = "";
+    const btnGoogle = document.createElement("button");
+    btnGoogle.innerText = "Entrar com Google";
+    btnGoogle.className = "btn btn-light full";
+    btnGoogle.type = "button";
+    btnGoogle.addEventListener("click", async () => {
+      await loginWithGoogle();
+    });
+    googleLoginArea.appendChild(btnGoogle);
+  }
+
+  welcomeGoogleBtn?.addEventListener("click", async () => {
+    await loginWithGoogle();
   });
+
+  closeWelcomePopup?.addEventListener("click", () => fecharWelcomePopup(true));
+  welcomeLaterBtn?.addEventListener("click", () => fecharWelcomePopup(true));
 }
 
 window.addEventListener("scroll", revealOnScroll);
@@ -648,61 +823,19 @@ window.addEventListener("storage", (event) => {
   }
 });
 
-function normalizeProduct(raw, fallbackId = Date.now()) {
-  return {
-    id: Number(raw.id ?? fallbackId),
-    name: raw.name || "Produto sem nome",
-    category: raw.category || "camisetas",
-    price: Number(raw.price || 0),
-    oldPrice: raw.oldPrice !== undefined && raw.oldPrice !== null && raw.oldPrice !== ""
-      ? Number(raw.oldPrice)
-      : null,
-    sale: raw.sale || "",
-    description: raw.description || "Peça premium com visual sofisticado, masculino e contemporâneo.",
-    image: raw.image || "",
-    featured: Boolean(raw.featured),
-    bestseller: Boolean(raw.bestseller)
-  };
-}
-
-function listenProductsFromFirestore() {
-  try {
-    onSnapshot(
-      collection(db, "produtos"),
-      (snapshot) => {
-        if (snapshot.empty) {
-          products = loadProductsFromLocal();
-        } else {
-          const firestoreProducts = snapshot.docs
-            .map((docSnap, index) => normalizeProduct(docSnap.data(), index + 1))
-            .sort((a, b) => b.id - a.id);
-
-          products = firestoreProducts;
-          saveProducts(products);
-        }
-
-        renderProducts();
-        renderBestSellers();
-        revealOnScroll();
-      },
-      (error) => {
-        console.error("Erro ao ouvir produtos do Firestore:", error);
-        products = loadProductsFromLocal();
-        renderProducts();
-        renderBestSellers();
-      }
-    );
-  } catch (error) {
-    console.error("Erro ao iniciar listener do Firestore:", error);
-    products = loadProductsFromLocal();
-    renderProducts();
-    renderBestSellers();
-  }
-}
-
 async function init() {
+  await prepareAuth();
   await handleRedirectLogin();
-  monitorAuth();
+
+  monitorAuth((user) => {
+    if (user) {
+      setLoggedUI(user);
+    } else {
+      setLoggedOutUI();
+    }
+  });
+
+  bindGoogleButtons();
   renderProducts();
   renderBestSellers();
   updateCart();

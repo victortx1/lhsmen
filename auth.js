@@ -4,7 +4,9 @@ import {
   signInWithRedirect,
   getRedirectResult,
   onAuthStateChanged,
-  signOut
+  signOut,
+  setPersistence,
+  browserLocalPersistence
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
 function isMobile() {
@@ -12,8 +14,18 @@ function isMobile() {
     || window.innerWidth <= 768;
 }
 
+export async function prepareAuth() {
+  try {
+    await setPersistence(auth, browserLocalPersistence);
+  } catch (error) {
+    console.error("Erro ao configurar persistência:", error);
+  }
+}
+
 export async function loginWithGoogle() {
   try {
+    await prepareAuth();
+
     if (isMobile()) {
       await signInWithRedirect(auth, googleProvider);
       return null;
@@ -30,6 +42,7 @@ export async function loginWithGoogle() {
 
 export async function handleRedirectLogin() {
   try {
+    await prepareAuth();
     const result = await getRedirectResult(auth);
     return result?.user || null;
   } catch (error) {
@@ -53,4 +66,8 @@ export async function logoutGoogle() {
     console.error("Erro ao sair:", error);
     alert("Não foi possível sair da conta.");
   }
+}
+
+export function getCurrentUser() {
+  return auth.currentUser;
 }
