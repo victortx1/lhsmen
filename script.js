@@ -231,6 +231,9 @@ const closeWelcomePopup = document.getElementById("closeWelcomePopup");
 const welcomeLaterBtn = document.getElementById("welcomeLaterBtn");
 const welcomeGoogleBtn = document.getElementById("welcomeGoogleBtn");
 
+let currentUser = null;
+let authReady = false;
+
 function saveCart() {
   saveArray(CART_KEY, state.cart);
 }
@@ -493,7 +496,10 @@ function openPanel(panelId) {
 
   if (panel) {
     panel.classList.add("open");
+    panel.hidden = false;
+    panel.setAttribute("aria-hidden", "false");
     overlay?.classList.add("show");
+    overlay?.removeAttribute("hidden");
     document.body.classList.add("panel-open");
   }
 }
@@ -501,13 +507,21 @@ function openPanel(panelId) {
 function closePanels() {
   document.querySelectorAll(".panel").forEach((panel) => {
     panel.classList.remove("open");
+    panel.setAttribute("aria-hidden", "true");
+    panel.hidden = true;
   });
 
   overlay?.classList.remove("show");
+  overlay?.setAttribute("hidden", "");
   document.body.classList.remove("panel-open");
 }
 
 function abrirPainelLogin() {
+  if (currentUser) {
+    irParaPerfil();
+    return;
+  }
+
   openPanel("loginPanel");
   mobileNav?.classList.remove("open");
 }
@@ -522,13 +536,17 @@ function irParaPerfil() {
 }
 
 function mostrarWelcomePopup() {
-  if (!welcomePopup) return;
+  if (!welcomePopup || currentUser) return;
+  welcomePopup.hidden = false;
   welcomePopup.classList.add("show");
   document.body.classList.add("panel-open");
 }
 
 function fecharWelcomePopup(salvar = true) {
-  welcomePopup?.classList.remove("show");
+  if (!welcomePopup) return;
+
+  welcomePopup.classList.remove("show");
+  welcomePopup.hidden = true;
   document.body.classList.remove("panel-open");
 
   if (salvar) {
@@ -537,6 +555,8 @@ function fecharWelcomePopup(salvar = true) {
 }
 
 function setLoggedUI(user) {
+  currentUser = user || null;
+
   const nome = user?.displayName || "Minha conta";
   const email = (user?.email || "").toLowerCase();
   const foto = user?.photoURL;
@@ -545,10 +565,11 @@ function setLoggedUI(user) {
   if (loginToggle) {
     loginToggle.setAttribute("data-logged", "true");
     loginToggle.setAttribute("title", nome);
+    loginToggle.setAttribute("aria-label", `Perfil de ${nome}`);
   }
 
   if (mobileLoginToggle) {
-    mobileLoginToggle.textContent = nome;
+    mobileLoginToggle.textContent = "Minha conta";
     mobileLoginToggle.setAttribute("data-logged", "true");
   }
 
@@ -570,9 +591,12 @@ function setLoggedUI(user) {
 }
 
 function setLoggedOutUI() {
+  currentUser = null;
+
   if (loginToggle) {
     loginToggle.removeAttribute("data-logged");
     loginToggle.setAttribute("title", "Entrar");
+    loginToggle.setAttribute("aria-label", "Abrir login");
   }
 
   if (mobileLoginToggle) {
@@ -590,9 +614,11 @@ function setLoggedOutUI() {
 
   const jaViuPopup = localStorage.getItem(WELCOME_POPUP_KEY);
 
-  if (!jaViuPopup) {
+  if (!jaViuPopup && authReady) {
     setTimeout(() => {
-      mostrarWelcomePopup();
+      if (!currentUser) {
+        mostrarWelcomePopup();
+      }
     }, 900);
   }
 }
@@ -671,12 +697,17 @@ document.getElementById("favoritesToggle")?.addEventListener("click", () => {
 });
 
 document.querySelectorAll("[data-close]").forEach((button) => {
-  button.addEventListener("click", closePanels);
+  button.addEventListener("click", () => {
+    if (button.dataset.close === "loginPanel") {
+      fecharPainelLogin();
+      return;
+    }
+    closePanels();
+  });
 });
 
 overlay?.addEventListener("click", () => {
   closePanels();
-  fecharWelcomePopup(false);
 });
 
 document.getElementById("searchToggle")?.addEventListener("click", () => {
@@ -684,7 +715,15 @@ document.getElementById("searchToggle")?.addEventListener("click", () => {
 });
 
 document.getElementById("menuToggle")?.addEventListener("click", () => {
-  document.getElementById("mobileNav")?.classList.toggle("open");
+  const nav = document.getElementById("mobileNav");
+  if (!nav) return;
+
+  const isOpen = nav.classList.toggle("open");
+  nav.hidden = false;
+
+  if (!isOpen) {
+    nav.hidden = true;
+  }
 });
 
 document.getElementById("searchInput")?.addEventListener("input", (e) => {
@@ -721,6 +760,11 @@ document.querySelectorAll("[data-category-link]").forEach((link) => {
     });
 
     renderProducts();
+
+    if (mobileNav) {
+      mobileNav.classList.remove("open");
+      mobileNav.hidden = true;
+    }
   });
 });
 
@@ -751,20 +795,16 @@ document.querySelectorAll(".add-look").forEach((button) => {
   });
 });
 
-loginToggle?.addEventListener("click", async () => {
-  const isLogged = loginToggle.getAttribute("data-logged");
-
-  if (isLogged) {
+loginToggle?.addEventListener("click", () => {
+  if (currentUser) {
     irParaPerfil();
   } else {
     abrirPainelLogin();
   }
 });
 
-mobileLoginToggle?.addEventListener("click", async () => {
-  const isLogged = mobileLoginToggle.getAttribute("data-logged");
-
-  if (isLogged) {
+mobileLoginToggle?.addEventListener("click", () => {
+  if (currentUser) {
     irParaPerfil();
   } else {
     abrirPainelLogin();
@@ -774,6 +814,7 @@ mobileLoginToggle?.addEventListener("click", async () => {
 function bindGoogleButtons() {
   if (googleLoginArea) {
     googleLoginArea.innerHTML = "";
+
     const btnGoogle = document.createElement("button");
     btnGoogle.innerText = "Entrar com Google";
     btnGoogle.className = "btn btn-light full";
@@ -781,15 +822,26 @@ function bindGoogleButtons() {
     btnGoogle.addEventListener("click", async () => {
       await loginWithGoogle();
     });
+
     googleLoginArea.appendChild(btnGoogle);
   }
 
-  welcomeGoogleBtn?.addEventListener("click", async () => {
-    await loginWithGoogle();
-  });
+  if (welcomeGoogleBtn && !welcomeGoogleBtn.dataset.bound) {
+    welcomeGoogleBtn.dataset.bound = "true";
+    welcomeGoogleBtn.addEventListener("click", async () => {
+      await loginWithGoogle();
+    });
+  }
 
-  closeWelcomePopup?.addEventListener("click", () => fecharWelcomePopup(true));
-  welcomeLaterBtn?.addEventListener("click", () => fecharWelcomePopup(true));
+  if (closeWelcomePopup && !closeWelcomePopup.dataset.bound) {
+    closeWelcomePopup.dataset.bound = "true";
+    closeWelcomePopup.addEventListener("click", () => fecharWelcomePopup(true));
+  }
+
+  if (welcomeLaterBtn && !welcomeLaterBtn.dataset.bound) {
+    welcomeLaterBtn.dataset.bound = "true";
+    welcomeLaterBtn.addEventListener("click", () => fecharWelcomePopup(true));
+  }
 }
 
 window.addEventListener("scroll", revealOnScroll);
@@ -824,8 +876,18 @@ window.addEventListener("storage", (event) => {
 });
 
 async function init() {
+  bindGoogleButtons();
+  renderProducts();
+  renderBestSellers();
+  updateCart();
+  updateFavorites();
+  revealOnScroll();
+  listenProductsFromFirestore();
+
   await prepareAuth();
   await handleRedirectLogin();
+
+  authReady = true;
 
   monitorAuth((user) => {
     if (user) {
@@ -834,14 +896,6 @@ async function init() {
       setLoggedOutUI();
     }
   });
-
-  bindGoogleButtons();
-  renderProducts();
-  renderBestSellers();
-  updateCart();
-  updateFavorites();
-  revealOnScroll();
-  listenProductsFromFirestore();
 }
 
 init();

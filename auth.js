@@ -6,16 +6,39 @@ import {
   onAuthStateChanged,
   signOut,
   setPersistence,
-  browserLocalPersistence
+  browserLocalPersistence,
+  browserSessionPersistence,
+  inMemoryPersistence
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
 function isMobileDevice() {
   return /Android|iPhone|iPad|iPod|Opera Mini|IEMobile|WPDesktop/i.test(navigator.userAgent);
 }
 
+let authPrepared = false;
+
 export async function prepareAuth() {
+  if (authPrepared) return;
+
   try {
     await setPersistence(auth, browserLocalPersistence);
+    authPrepared = true;
+    return;
+  } catch (error) {
+    console.warn("Falha em browserLocalPersistence:", error);
+  }
+
+  try {
+    await setPersistence(auth, browserSessionPersistence);
+    authPrepared = true;
+    return;
+  } catch (error) {
+    console.warn("Falha em browserSessionPersistence:", error);
+  }
+
+  try {
+    await setPersistence(auth, inMemoryPersistence);
+    authPrepared = true;
   } catch (error) {
     console.error("Erro ao configurar persistência:", error);
   }
@@ -69,8 +92,9 @@ export async function loginWithGoogle() {
 
 export async function handleRedirectLogin() {
   try {
+    await prepareAuth();
     const result = await getRedirectResult(auth);
-    return result?.user || null;
+    return result?.user || auth.currentUser || null;
   } catch (error) {
     console.error("Erro no retorno do login por redirecionamento:", error);
 
@@ -86,11 +110,18 @@ export async function handleRedirectLogin() {
       return null;
     }
 
-    return null;
+    return auth.currentUser || null;
   }
 }
 
-export function monitorAuth(callback) {
+export async function getCurrentUser() {
+  await prepareAuth();
+  return auth.currentUser || null;
+}
+
+export async function monitorAuth(callback) {
+  await prepareAuth();
+
   return onAuthStateChanged(auth, (user) => {
     if (typeof callback === "function") {
       callback(user || null);
