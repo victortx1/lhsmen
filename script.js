@@ -498,6 +498,18 @@ document.getElementById("loginToggle")?.addEventListener("click", () => {
   const isLogged = document.getElementById("loginToggle")?.getAttribute("data-logged");
   if (!isLogged) {
     openPanel("loginPanel");
+  } else {
+    window.location.href = "perfil.html";
+  }
+});
+
+document.getElementById("mobileLoginToggle")?.addEventListener("click", () => {
+  const isLogged = document.getElementById("loginToggle")?.getAttribute("data-logged");
+  if (!isLogged) {
+    openPanel("loginPanel");
+    document.getElementById("mobileNav")?.classList.remove("open");
+  } else {
+    window.location.href = "perfil.html";
   }
 });
 
