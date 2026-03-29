@@ -8,64 +8,49 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
 function isMobile() {
-  return /Android|iPhone|iPad|iPod|Opera Mini|IEMobile|WPDesktop/i.test(navigator.userAgent);
+  return /Android|iPhone|iPad|iPod|Opera Mini|IEMobile|WPDesktop/i.test(navigator.userAgent)
+    || window.innerWidth <= 768;
 }
 
-async function loginWithGoogle() {
+export async function loginWithGoogle() {
   try {
     if (isMobile()) {
       await signInWithRedirect(auth, googleProvider);
-      return;
-    } else {
-      await signInWithPopup(auth, googleProvider);
+      return null;
     }
+
+    const result = await signInWithPopup(auth, googleProvider);
+    return result?.user || null;
   } catch (error) {
     console.error("Erro no login com Google:", error);
     alert("Não foi possível entrar com Google.");
+    return null;
   }
 }
 
-async function handleRedirectLogin() {
+export async function handleRedirectLogin() {
   try {
     const result = await getRedirectResult(auth);
-    if (result?.user) {
-      console.log("Login via redirect concluído:", result.user);
-    }
+    return result?.user || null;
   } catch (error) {
     console.error("Erro ao processar redirect:", error);
+    return null;
   }
 }
 
-function updateUI(user) {
-  const loginBtn = document.getElementById("loginBtn");
-  const userName = document.getElementById("userName");
-  const userPhoto = document.getElementById("userPhoto");
-  const profileArea = document.getElementById("profileArea");
-
-  if (user) {
-    if (loginBtn) loginBtn.style.display = "none";
-    if (profileArea) profileArea.style.display = "flex";
-    if (userName) userName.textContent = user.displayName || "Usuário";
-    if (userPhoto) userPhoto.src = user.photoURL || "";
-  } else {
-    if (loginBtn) loginBtn.style.display = "block";
-    if (profileArea) profileArea.style.display = "none";
-  }
+export function monitorAuth(callback) {
+  return onAuthStateChanged(auth, (user) => {
+    if (typeof callback === "function") {
+      callback(user);
+    }
+  });
 }
 
-onAuthStateChanged(auth, (user) => {
-  console.log("Estado do usuário:", user);
-  updateUI(user);
-});
-
-handleRedirectLogin();
-
-window.loginWithGoogle = loginWithGoogle;
-
-window.logoutGoogle = async function () {
+export async function logoutGoogle() {
   try {
     await signOut(auth);
   } catch (error) {
     console.error("Erro ao sair:", error);
+    alert("Não foi possível sair da conta.");
   }
-};
+}
