@@ -1,18 +1,11 @@
 import { auth, googleProvider } from "./firebase.js";
 import {
   signInWithPopup,
-  signInWithRedirect,
-  getRedirectResult,
   onAuthStateChanged,
   signOut,
   setPersistence,
   browserLocalPersistence
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-
-function isMobile() {
-  return /Android|iPhone|iPad|iPod|Opera Mini|IEMobile|WPDesktop/i.test(navigator.userAgent)
-    || window.innerWidth <= 768;
-}
 
 export async function prepareAuth() {
   try {
@@ -25,12 +18,6 @@ export async function prepareAuth() {
 export async function loginWithGoogle() {
   try {
     await prepareAuth();
-
-    if (isMobile()) {
-      await signInWithRedirect(auth, googleProvider);
-      return null;
-    }
-
     const result = await signInWithPopup(auth, googleProvider);
     return result?.user || null;
   } catch (error) {
@@ -41,14 +28,7 @@ export async function loginWithGoogle() {
 }
 
 export async function handleRedirectLogin() {
-  try {
-    await prepareAuth();
-    const result = await getRedirectResult(auth);
-    return result?.user || null;
-  } catch (error) {
-    console.error("Erro ao processar redirect:", error);
-    return null;
-  }
+  return null;
 }
 
 export function monitorAuth(callback) {
@@ -66,8 +46,4 @@ export async function logoutGoogle() {
     console.error("Erro ao sair:", error);
     alert("Não foi possível sair da conta.");
   }
-}
-
-export function getCurrentUser() {
-  return auth.currentUser;
 }
