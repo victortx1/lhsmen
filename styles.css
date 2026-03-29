@@ -1397,3 +1397,112 @@ textarea {
     font-size: 14px;
   }
 }
+.site-loader {
+  position: fixed;
+  inset: 0;
+  z-index: 99999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #000;
+  overflow: hidden;
+  transition: opacity 0.7s ease, visibility 0.7s ease;
+}
+
+.site-loader.hidden {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.loader-overlay {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at top, rgba(255, 255, 255, 0.08), transparent 35%),
+    radial-gradient(circle at bottom, rgba(255, 255, 255, 0.04), transparent 30%),
+    linear-gradient(135deg, #000 0%, #050505 45%, #0a0a0a 100%);
+}
+
+.loader-content {
+  position: relative;
+  z-index: 2;
+  text-align: center;
+  padding: 20px;
+  animation: loaderFadeUp 0.9s ease;
+}
+
+.loader-logo {
+  font-family: "Cormorant Garamond", serif;
+  font-size: clamp(2.5rem, 7vw, 5rem);
+  font-weight: 700;
+  letter-spacing: 0.35rem;
+  color: #fff;
+  margin-bottom: 20px;
+  text-transform: uppercase;
+}
+
+.loader-line {
+  width: min(240px, 70vw);
+  height: 2px;
+  margin: 0 auto 18px;
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 999px;
+  overflow: hidden;
+  position: relative;
+}
+
+.loader-line::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -40%;
+  width: 40%;
+  height: 100%;
+  background: #fff;
+  box-shadow: 0 0 20px rgba(255, 255, 255, 0.7);
+  animation: loaderRun 1.4s ease-in-out infinite;
+}
+
+.loader-text {
+  color: rgba(255, 255, 255, 0.72);
+  font-family: "Inter", sans-serif;
+  font-size: 0.95rem;
+  letter-spacing: 0.08rem;
+  text-transform: uppercase;
+}
+
+@keyframes loaderRun {
+  0% {
+    left: -40%;
+  }
+  100% {
+    left: 100%;
+  }
+}
+
+@keyframes loaderFadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@media (max-width: 600px) {
+  .loader-logo {
+    font-size: 2.2rem;
+    letter-spacing: 0.2rem;
+  }
+
+  .loader-text {
+    font-size: 0.8rem;
+  }
+
+  .loader-line {
+    width: 60vw;
+    height: 2px;
+  }
+}
