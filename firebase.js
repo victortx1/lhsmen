@@ -23,4 +23,6 @@ googleProvider.setCustomParameters({
   prompt: "select_account"
 });
 
+auth.languageCode = "pt-BR";
+
 export { app, db, auth, googleProvider };

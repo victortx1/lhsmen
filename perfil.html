@@ -6,9 +6,12 @@
   <title>Meu Perfil | LHS MEN</title>
   <meta name="description" content="Perfil do usuário da LHS MEN" />
 
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Cormorant+Garamond:wght@500;600;700&display=swap" rel="stylesheet">
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Cormorant+Garamond:wght@500;600;700&display=swap"
+    rel="stylesheet"
+  />
 
   <style>
     :root {
@@ -220,6 +223,9 @@
       transition: 0.25s ease;
       width: 100%;
       text-align: center;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
     }
 
     .btn-primary {
@@ -427,7 +433,7 @@
 <body>
   <header class="topbar">
     <div class="container nav-wrap">
-      <a href="index.html" class="brand">
+      <a href="./index.html" class="brand">
         <span class="brand-box">LHS</span>
         <div class="brand-text">
           <strong>MEN</strong>
@@ -435,20 +441,20 @@
       </a>
 
       <nav class="nav-links">
-        <a href="index.html">Início</a>
-        <a href="index.html#loja">Loja</a>
-        <a href="index.html#novidades">Novidades</a>
-        <a href="index.html#faq">FAQ</a>
+        <a href="./index.html">Início</a>
+        <a href="./index.html#loja">Loja</a>
+        <a href="./index.html#novidades">Novidades</a>
+        <a href="./index.html#faq">FAQ</a>
       </nav>
     </div>
   </header>
 
-  <main id="profilePage" style="display:none;">
+  <main id="profilePage" style="display: none;">
     <section class="profile-hero">
       <div class="container profile-shell">
         <aside class="card profile-card">
           <div class="avatar-wrap">
-            <img id="profilePhoto" class="avatar" alt="Foto do perfil" />
+            <img id="profilePhoto" class="avatar" alt="Foto do perfil" referrerpolicy="no-referrer" />
             <div id="profilePlaceholder" class="avatar-placeholder">L</div>
           </div>
 
@@ -461,7 +467,7 @@
           </div>
 
           <div class="profile-actions">
-            <a href="index.html" class="btn btn-primary">Voltar para a loja</a>
+            <a href="./index.html" class="btn btn-primary">Voltar para a loja</a>
             <button id="logoutBtn" class="btn btn-outline" type="button">Sair da conta</button>
           </div>
         </aside>
@@ -521,7 +527,7 @@
       <p>
         Você precisa entrar com sua conta Google na LHS MEN antes de acessar esta página.
       </p>
-      <a href="index.html" class="btn btn-primary">Voltar para entrar</a>
+      <a href="./index.html" class="btn btn-primary">Voltar para entrar</a>
     </div>
   </section>
 
@@ -558,12 +564,22 @@
       return (parts[0][0] + parts[1][0]).toUpperCase();
     }
 
+    function escapeHtml(text = "") {
+      return String(text)
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#39;");
+    }
+
     function readLocalArray(key) {
       try {
         const raw = localStorage.getItem(key);
         const parsed = raw ? JSON.parse(raw) : [];
         return Array.isArray(parsed) ? parsed : [];
-      } catch {
+      } catch (error) {
+        console.error("Erro ao ler localStorage:", error);
         return [];
       }
     }
@@ -579,15 +595,16 @@
     function renderMiniList(container, items, emptyMessage, type = "generic") {
       if (!container) return;
 
-      if (!items.length) {
-        container.innerHTML = `<div class="empty-state">${emptyMessage}</div>`;
+      if (!Array.isArray(items) || !items.length) {
+        container.innerHTML = `<div class="empty-state">${escapeHtml(emptyMessage)}</div>`;
         return;
       }
 
       container.innerHTML = items.map((item) => {
-        const name = item?.name || item?.title || "Produto";
-        const description = item?.description || "Item salvo na sua conta.";
-        const price = item?.price ? `<p><strong>${formatPrice(item.price)}</strong></p>` : "";
+        const name = escapeHtml(item?.name || item?.title || "Produto");
+        const description = escapeHtml(item?.description || "Item salvo na sua conta.");
+        const hasPrice = item?.price !== undefined && item?.price !== null && item?.price !== "";
+        const price = hasPrice ? `<p><strong>${formatPrice(item.price)}</strong></p>` : "";
 
         if (type === "cart") {
           const quantity = Number(item?.quantity || 1);
@@ -620,9 +637,9 @@
       profilePage.style.display = "block";
       loginRequired.style.display = "none";
 
-      const displayName = user.displayName || "Cliente LHS MEN";
-      const email = user.email || "Sem e-mail";
-      const photoURL = user.photoURL;
+      const displayName = user?.displayName || "Cliente LHS MEN";
+      const email = user?.email || "Sem e-mail";
+      const photoURL = user?.photoURL || "";
 
       profileName.textContent = displayName;
       profileEmail.textContent = email;
@@ -631,6 +648,12 @@
         profilePhoto.src = photoURL;
         profilePhoto.style.display = "block";
         profilePlaceholder.style.display = "none";
+
+        profilePhoto.onerror = () => {
+          profilePhoto.style.display = "none";
+          profilePlaceholder.textContent = getInitials(displayName);
+          profilePlaceholder.style.display = "flex";
+        };
       } else {
         profilePhoto.style.display = "none";
         profilePlaceholder.textContent = getInitials(displayName);
@@ -640,8 +663,10 @@
       const favorites = readLocalArray(FAVORITES_KEY);
       const cart = readLocalArray(CART_KEY);
 
-      favoriteTotal.textContent = favorites.length;
-      cartTotalItems.textContent = cart.reduce((acc, item) => acc + Number(item?.quantity || 1), 0);
+      favoriteTotal.textContent = String(favorites.length);
+      cartTotalItems.textContent = String(
+        cart.reduce((acc, item) => acc + Number(item?.quantity || 1), 0)
+      );
 
       renderMiniList(
         favoriteList,
@@ -661,26 +686,30 @@
     logoutBtn?.addEventListener("click", async () => {
       try {
         await signOut(auth);
-        window.location.href = "index.html";
+        window.location.href = "./index.html";
       } catch (error) {
         console.error("Erro ao sair da conta:", error);
         alert("Não foi possível sair da conta.");
       }
     });
 
-    try {
-      await setPersistence(auth, browserLocalPersistence);
-    } catch (error) {
-      console.error("Erro ao definir persistência:", error);
+    async function initProfile() {
+      try {
+        await setPersistence(auth, browserLocalPersistence);
+      } catch (error) {
+        console.error("Erro ao definir persistência:", error);
+      }
+
+      onAuthStateChanged(auth, (user) => {
+        if (user) {
+          showLoggedState(user);
+        } else {
+          showLoggedOutState();
+        }
+      });
     }
 
-    onAuthStateChanged(auth, (user) => {
-      if (user) {
-        showLoggedState(user);
-      } else {
-        showLoggedOutState();
-      }
-    });
+    initProfile();
   </script>
 </body>
 </html>

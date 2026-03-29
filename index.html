@@ -9,17 +9,19 @@
     name="description"
     content="LHS MEN - Loja masculina premium com estilo luxuoso, moderno e streetwear sofisticado."
   />
+  <meta name="theme-color" content="#0b0b0b" />
+
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link
     href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Cormorant+Garamond:wght@500;600;700&display=swap"
     rel="stylesheet"
   />
-  <link rel="stylesheet" href="styles.css" />
+
+  <link rel="stylesheet" href="./styles.css" />
 </head>
 <body>
-
-  <div id="siteLoader" class="site-loader">
+  <div id="siteLoader" class="site-loader" aria-hidden="true">
     <div class="loader-overlay"></div>
     <div class="loader-content">
       <div class="loader-logo">LHS MEN</div>
@@ -28,15 +30,30 @@
     </div>
   </div>
 
-  <div class="overlay" id="overlay"></div>
+  <div class="overlay" id="overlay" hidden></div>
 
-  <div class="welcome-popup" id="welcomePopup">
+  <div
+    class="welcome-popup"
+    id="welcomePopup"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="welcomeTitle"
+    aria-describedby="welcomeDescription"
+    hidden
+  >
     <div class="welcome-popup-box">
-      <button class="welcome-close" id="closeWelcomePopup" type="button">✕</button>
+      <button
+        class="welcome-close"
+        id="closeWelcomePopup"
+        type="button"
+        aria-label="Fechar aviso de boas-vindas"
+      >
+        ✕
+      </button>
 
       <span class="welcome-badge">BEM-VINDO À LHS MEN</span>
-      <h2>Entre com sua conta Google</h2>
-      <p>
+      <h2 id="welcomeTitle">Entre com sua conta Google</h2>
+      <p id="welcomeDescription">
         Crie sua conta ou entre agora para acessar seu perfil, salvar seus favoritos
         e ter uma experiência mais completa dentro da LHS MEN.
       </p>
@@ -52,19 +69,19 @@
     </div>
   </div>
 
-  <div class="noise"></div>
-  <div class="cursor-glow"></div>
+  <div class="noise" aria-hidden="true"></div>
+  <div class="cursor-glow" aria-hidden="true"></div>
 
   <header class="topbar">
     <div class="container nav-wrap">
-      <a href="#home" class="brand">
+      <a href="#home" class="brand" aria-label="Ir para o início">
         <span class="brand-box">LHS</span>
         <div class="brand-text">
           <strong>MEN</strong>
         </div>
       </a>
 
-      <nav class="desktop-nav">
+      <nav class="desktop-nav" aria-label="Navegação principal">
         <a href="#home">Início</a>
         <a href="#lancamentos">Lançamentos</a>
         <a href="#loja">Loja</a>
@@ -74,36 +91,41 @@
       </nav>
 
       <div class="nav-actions">
-        <button class="icon-btn" id="searchToggle" title="Buscar" type="button">⌕</button>
+        <button class="icon-btn" id="searchToggle" title="Buscar" type="button" aria-label="Abrir busca">
+          ⌕
+        </button>
 
-        <button class="icon-btn" id="favoritesToggle" title="Favoritos" type="button">
+        <button class="icon-btn" id="favoritesToggle" title="Favoritos" type="button" aria-label="Abrir favoritos">
           ♡ <span class="badge" id="favoriteCount">0</span>
         </button>
 
-        <button class="icon-btn" id="cartToggle" title="Carrinho" type="button">
+        <button class="icon-btn" id="cartToggle" title="Carrinho" type="button" aria-label="Abrir carrinho">
           🛍 <span class="badge" id="cartCount">0</span>
         </button>
 
-        <button class="profile-btn" id="loginToggle" type="button" title="Perfil">
+        <button class="profile-btn" id="loginToggle" type="button" title="Perfil" aria-label="Abrir perfil">
           <span id="profileIcon">👤</span>
         </button>
 
-        <button class="menu-toggle" id="menuToggle" type="button">☰</button>
+        <button class="menu-toggle" id="menuToggle" type="button" aria-label="Abrir menu mobile">
+          ☰
+        </button>
       </div>
     </div>
 
-    <div class="search-bar" id="searchBar">
+    <div class="search-bar" id="searchBar" hidden>
       <div class="container search-inner">
         <input
           type="text"
           id="searchInput"
           placeholder="Busque por camisetas, jaquetas, tênis, acessórios..."
+          aria-label="Buscar produtos"
         />
         <button id="clearSearch" type="button">Limpar</button>
       </div>
     </div>
 
-    <div class="mobile-nav" id="mobileNav">
+    <div class="mobile-nav" id="mobileNav" hidden>
       <a href="#home">Início</a>
       <a href="#lancamentos">Lançamentos</a>
       <a href="#loja">Loja</a>
@@ -114,7 +136,9 @@
       <a href="#sobre">Sobre nós</a>
       <a href="#faq">FAQ</a>
       <a href="#contato">Contato</a>
-      <button class="mobile-login-btn" id="mobileLoginToggle" type="button">Entrar</button>
+      <button class="mobile-login-btn" id="mobileLoginToggle" type="button">
+        Entrar
+      </button>
     </div>
   </header>
 
@@ -155,7 +179,7 @@
       </div>
     </section>
 
-    <section class="marquee">
+    <section class="marquee" aria-label="Destaques da marca">
       <div class="marquee-track">
         <span>MODA PREMIUM</span>
         <span>ESTILO MASCULINO</span>
@@ -464,10 +488,10 @@
           </div>
         </div>
 
-        <form class="contact-form reveal delay-1">
-          <input type="text" placeholder="Seu nome" required />
-          <input type="email" placeholder="Seu e-mail" required />
-          <textarea placeholder="Sua mensagem" rows="6" required></textarea>
+        <form class="contact-form reveal delay-1" id="contactForm">
+          <input type="text" name="name" placeholder="Seu nome" required />
+          <input type="email" name="email" placeholder="Seu e-mail" required />
+          <textarea name="message" placeholder="Sua mensagem" rows="6" required></textarea>
           <button class="btn btn-light" type="submit">Enviar mensagem</button>
         </form>
       </div>
@@ -477,7 +501,7 @@
   <footer class="footer">
     <div class="container footer-grid">
       <div>
-        <a href="#home" class="brand footer-brand">
+        <a href="#home" class="brand footer-brand" aria-label="Voltar ao topo">
           <span class="brand-box">LHS</span>
           <div class="brand-text">
             <strong>MEN</strong>
@@ -515,7 +539,7 @@
         <a href="#contato">Atendimento</a>
         <a href="#">Termos de uso</a>
         <a href="#">Privacidade</a>
-        <a href="admin.html" id="adminLink" style="display: none;">Painel Administrativo</a>
+        <a href="./admin.html" id="adminLink" style="display: none;">Painel Administrativo</a>
       </div>
     </div>
 
@@ -525,10 +549,18 @@
     </div>
   </footer>
 
-  <aside class="panel" id="cartPanel">
+  <aside
+    class="panel"
+    id="cartPanel"
+    aria-labelledby="cartPanelTitle"
+    aria-hidden="true"
+    hidden
+  >
     <div class="panel-header">
-      <h3>Carrinho</h3>
-      <button class="close-panel" data-close="cartPanel" type="button">✕</button>
+      <h3 id="cartPanelTitle">Carrinho</h3>
+      <button class="close-panel" data-close="cartPanel" type="button" aria-label="Fechar carrinho">
+        ✕
+      </button>
     </div>
 
     <div class="panel-body" id="cartItems"></div>
@@ -542,19 +574,35 @@
     </div>
   </aside>
 
-  <aside class="panel" id="favoritesPanel">
+  <aside
+    class="panel"
+    id="favoritesPanel"
+    aria-labelledby="favoritesPanelTitle"
+    aria-hidden="true"
+    hidden
+  >
     <div class="panel-header">
-      <h3>Favoritos</h3>
-      <button class="close-panel" data-close="favoritesPanel" type="button">✕</button>
+      <h3 id="favoritesPanelTitle">Favoritos</h3>
+      <button class="close-panel" data-close="favoritesPanel" type="button" aria-label="Fechar favoritos">
+        ✕
+      </button>
     </div>
 
     <div class="panel-body" id="favoriteItems"></div>
   </aside>
 
-  <aside class="panel auth-panel" id="loginPanel">
+  <aside
+    class="panel auth-panel"
+    id="loginPanel"
+    aria-labelledby="loginPanelTitle"
+    aria-hidden="true"
+    hidden
+  >
     <div class="panel-header">
-      <h3>Entrar</h3>
-      <button class="close-panel" data-close="loginPanel" type="button">✕</button>
+      <h3 id="loginPanelTitle">Entrar</h3>
+      <button class="close-panel" data-close="loginPanel" type="button" aria-label="Fechar painel de login">
+        ✕
+      </button>
     </div>
 
     <div class="google-login-wrap">
@@ -579,19 +627,27 @@
       sessionStorage.setItem("lhsmen_loader_shown", "true");
       document.body.style.overflow = "hidden";
 
-      window.addEventListener("load", () => {
-        setTimeout(() => {
-          loader.classList.add("hidden");
-          document.body.style.overflow = "";
+      const hideLoader = () => {
+        loader.classList.add("hidden");
+        document.body.style.overflow = "";
 
-          setTimeout(() => {
+        setTimeout(() => {
+          if (loader && loader.parentNode) {
             loader.remove();
-          }, 700);
-        }, 1800);
-      });
+          }
+        }, 700);
+      };
+
+      if (document.readyState === "complete") {
+        setTimeout(hideLoader, 1800);
+      } else {
+        window.addEventListener("load", () => {
+          setTimeout(hideLoader, 1800);
+        });
+      }
     });
   </script>
 
-  <script type="module" src="script.js"></script>
+  <script type="module" src="./script.js"></script>
 </body>
 </html>
