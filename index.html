@@ -594,216 +594,217 @@
 
   <script type="module" src="script.js"></script>
 
-  <script type="module">
-    import { auth } from "./firebase.js";
-    import {
-      GoogleAuthProvider,
-      signInWithPopup,
-      signInWithRedirect,
-      getRedirectResult,
-      onAuthStateChanged,
-      setPersistence,
-      browserLocalPersistence
-    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+<script type="module">
+  import { auth } from "./firebase.js";
+  import {
+    GoogleAuthProvider,
+    signInWithPopup,
+    signInWithRedirect,
+    getRedirectResult,
+    onAuthStateChanged,
+    setPersistence,
+    browserLocalPersistence
+  } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
-    const OWNER_EMAILS = ["victoj796@gmail.com"];
-    const provider = new GoogleAuthProvider();
-    const WELCOME_POPUP_KEY = "lhsmen_welcome_popup_seen";
+  const OWNER_EMAILS = ["victoj796@gmail.com"];
+  const provider = new GoogleAuthProvider();
+  const WELCOME_POPUP_KEY = "lhsmen_welcome_popup_seen";
 
-    const googleLoginArea = document.getElementById("googleLoginArea");
-    const loginToggle = document.getElementById("loginToggle");
-    const profileIcon = document.getElementById("profileIcon");
-    const mobileLoginToggle = document.getElementById("mobileLoginToggle");
-    const loginPanel = document.getElementById("loginPanel");
-    const overlay = document.getElementById("overlay");
-    const adminLink = document.getElementById("adminLink");
-    const mobileNav = document.getElementById("mobileNav");
+  const googleLoginArea = document.getElementById("googleLoginArea");
+  const loginToggle = document.getElementById("loginToggle");
+  const profileIcon = document.getElementById("profileIcon");
+  const mobileLoginToggle = document.getElementById("mobileLoginToggle");
+  const loginPanel = document.getElementById("loginPanel");
+  const overlay = document.getElementById("overlay");
+  const adminLink = document.getElementById("adminLink");
+  const mobileNav = document.getElementById("mobileNav");
 
-    const welcomePopup = document.getElementById("welcomePopup");
-    const closeWelcomePopup = document.getElementById("closeWelcomePopup");
-    const welcomeLaterBtn = document.getElementById("welcomeLaterBtn");
-    const welcomeGoogleBtn = document.getElementById("welcomeGoogleBtn");
+  const welcomePopup = document.getElementById("welcomePopup");
+  const closeWelcomePopup = document.getElementById("closeWelcomePopup");
+  const welcomeLaterBtn = document.getElementById("welcomeLaterBtn");
+  const welcomeGoogleBtn = document.getElementById("welcomeGoogleBtn");
 
-    function isMobileDevice() {
-      return /Android|iPhone|iPad|iPod|Opera Mini|IEMobile|WPDesktop/i.test(navigator.userAgent)
-        || window.innerWidth <= 768;
-    }
+  function isMobileDevice() {
+    return /Android|iPhone|iPad|iPod|Opera Mini|IEMobile|WPDesktop/i.test(navigator.userAgent)
+      || window.innerWidth <= 768;
+  }
 
-    function fecharPainelLogin() {
-      if (loginPanel) loginPanel.classList.remove("open");
-      if (overlay) overlay.classList.remove("show");
-      if (mobileNav) mobileNav.classList.remove("open");
-      document.body.classList.remove("panel-open");
-    }
+  function fecharPainelLogin() {
+    if (loginPanel) loginPanel.classList.remove("open");
+    if (overlay) overlay.classList.remove("show");
+    if (mobileNav) mobileNav.classList.remove("open");
+    document.body.classList.remove("panel-open");
+  }
 
-    function abrirPainelLogin() {
-      if (loginPanel) loginPanel.classList.add("open");
-      if (overlay) overlay.classList.add("show");
+  function abrirPainelLogin() {
+    if (loginPanel) loginPanel.classList.add("open");
+    if (overlay) overlay.classList.add("show");
+    document.body.classList.add("panel-open");
+  }
+
+  function irParaPerfil() {
+    window.location.href = "perfil.html";
+  }
+
+  function mostrarWelcomePopup() {
+    if (welcomePopup) {
+      welcomePopup.classList.add("show");
       document.body.classList.add("panel-open");
     }
+  }
 
-    function irParaPerfil() {
-      window.location.href = "perfil.html";
+  function fecharWelcomePopup(salvar = true) {
+    if (welcomePopup) {
+      welcomePopup.classList.remove("show");
     }
 
-    function mostrarWelcomePopup() {
-      if (welcomePopup) {
-        welcomePopup.classList.add("show");
-        document.body.classList.add("panel-open");
-      }
+    document.body.classList.remove("panel-open");
+
+    if (salvar) {
+      localStorage.setItem(WELCOME_POPUP_KEY, "true");
     }
+  }
 
-    function fecharWelcomePopup(salvar = true) {
-      if (welcomePopup) {
-        welcomePopup.classList.remove("show");
-      }
-
-      document.body.classList.remove("panel-open");
-
-      if (salvar) {
-        localStorage.setItem(WELCOME_POPUP_KEY, "true");
-      }
-    }
-
-    async function entrarComGoogle() {
-      try {
-        await setPersistence(auth, browserLocalPersistence);
-        localStorage.setItem(WELCOME_POPUP_KEY, "true");
-
-        if (isMobileDevice()) {
-          await signInWithRedirect(auth, provider);
-        } else {
-          await signInWithPopup(auth, provider);
-        }
-      } catch (error) {
-        console.error("Erro no login com Google:", error);
-        alert("Não foi possível entrar com Google.");
-      }
-    }
-
-    if (googleLoginArea) {
-      googleLoginArea.innerHTML = "";
-
-      const btnGoogle = document.createElement("button");
-      btnGoogle.innerText = "Entrar com Google";
-      btnGoogle.className = "btn btn-light full";
-      btnGoogle.type = "button";
-
-      btnGoogle.addEventListener("click", entrarComGoogle);
-      googleLoginArea.appendChild(btnGoogle);
-    }
-
-    if (welcomeGoogleBtn) {
-      welcomeGoogleBtn.addEventListener("click", entrarComGoogle);
-    }
-
-    if (closeWelcomePopup) {
-      closeWelcomePopup.addEventListener("click", () => {
-        fecharWelcomePopup(true);
-      });
-    }
-
-    if (welcomeLaterBtn) {
-      welcomeLaterBtn.addEventListener("click", () => {
-        fecharWelcomePopup(true);
-      });
-    }
+  function setLoggedUI(user) {
+    const nome = user.displayName || "Minha conta";
+    const email = (user.email || "").toLowerCase();
+    const foto = user.photoURL;
+    const isOwner = OWNER_EMAILS.includes(email);
 
     if (loginToggle) {
-      loginToggle.addEventListener("click", () => {
-        const isLogged = loginToggle.getAttribute("data-logged");
-        if (isLogged) {
-          irParaPerfil();
-        } else {
-          abrirPainelLogin();
-        }
-      });
+      loginToggle.setAttribute("data-logged", "true");
+      loginToggle.setAttribute("title", nome);
     }
 
     if (mobileLoginToggle) {
-      mobileLoginToggle.addEventListener("click", () => {
-        const isLogged = mobileLoginToggle.getAttribute("data-logged");
-        if (isLogged) {
-          irParaPerfil();
-        } else {
-          abrirPainelLogin();
-        }
-      });
+      mobileLoginToggle.textContent = nome;
+      mobileLoginToggle.setAttribute("data-logged", "true");
     }
 
-    try {
-      await getRedirectResult(auth);
-    } catch (error) {
-      console.error("Erro no retorno do login com Google:", error);
-    }
-
-    function atualizarBotoesUsuario(user) {
-      if (user) {
-        const nome = user.displayName || "Minha conta";
-        const email = (user.email || "").toLowerCase();
-        const foto = user.photoURL;
-        const isOwner = OWNER_EMAILS.includes(email);
-
-        if (loginToggle) {
-          loginToggle.setAttribute("data-logged", "true");
-          loginToggle.setAttribute("title", nome);
-        }
-
-        if (mobileLoginToggle) {
-          mobileLoginToggle.innerText = nome;
-          mobileLoginToggle.setAttribute("data-logged", "true");
-        }
-
-        if (profileIcon) {
-          if (foto) {
-            profileIcon.innerHTML = `<img src="${foto}" alt="${nome}">`;
-          } else {
-            profileIcon.textContent = nome.charAt(0).toUpperCase();
-          }
-        }
-
-        if (adminLink) {
-          adminLink.style.display = isOwner ? "inline-block" : "none";
-        }
-
-        localStorage.setItem(WELCOME_POPUP_KEY, "true");
-        fecharWelcomePopup(false);
-        fecharPainelLogin();
+    if (profileIcon) {
+      if (foto) {
+        profileIcon.innerHTML = `<img src="${foto}" alt="${nome}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`;
       } else {
-        if (loginToggle) {
-          loginToggle.removeAttribute("data-logged");
-          loginToggle.setAttribute("title", "Entrar");
-        }
-
-        if (mobileLoginToggle) {
-          mobileLoginToggle.innerText = "Entrar";
-          mobileLoginToggle.removeAttribute("data-logged");
-        }
-
-        if (profileIcon) {
-          profileIcon.textContent = "👤";
-        }
-
-        if (adminLink) {
-          adminLink.style.display = "none";
-        }
-
-        const jaViuPopup = localStorage.getItem(WELCOME_POPUP_KEY);
-
-        if (!jaViuPopup) {
-          setTimeout(() => {
-            mostrarWelcomePopup();
-          }, 900);
-        }
+        profileIcon.textContent = nome.charAt(0).toUpperCase();
       }
     }
 
-    onAuthStateChanged(auth, (user) => {
-      atualizarBotoesUsuario(user);
-    });
+    if (adminLink) {
+      adminLink.style.display = isOwner ? "inline-block" : "inline-block";
+    }
 
-    window.firebaseAuth = auth;
-    window.firebaseUser = () => auth.currentUser;
-  </script>
+    localStorage.setItem(WELCOME_POPUP_KEY, "true");
+    fecharWelcomePopup(false);
+    fecharPainelLogin();
+  }
+
+  function setLoggedOutUI() {
+    if (loginToggle) {
+      loginToggle.removeAttribute("data-logged");
+      loginToggle.setAttribute("title", "Entrar");
+    }
+
+    if (mobileLoginToggle) {
+      mobileLoginToggle.textContent = "Entrar";
+      mobileLoginToggle.removeAttribute("data-logged");
+    }
+
+    if (profileIcon) {
+      profileIcon.textContent = "👤";
+    }
+
+    if (adminLink) {
+      adminLink.style.display = "none";
+    }
+
+    const jaViuPopup = localStorage.getItem(WELCOME_POPUP_KEY);
+
+    if (!jaViuPopup) {
+      setTimeout(() => {
+        mostrarWelcomePopup();
+      }, 900);
+    }
+  }
+
+  async function entrarComGoogle() {
+    try {
+      await setPersistence(auth, browserLocalPersistence);
+      localStorage.setItem(WELCOME_POPUP_KEY, "true");
+
+      if (isMobileDevice()) {
+        await signInWithRedirect(auth, provider);
+        return;
+      }
+
+      const result = await signInWithPopup(auth, provider);
+      if (result?.user) {
+        setLoggedUI(result.user);
+      }
+    } catch (error) {
+      console.error("Erro no login com Google:", error);
+      alert("Não foi possível entrar com Google.");
+    }
+  }
+
+  if (googleLoginArea) {
+    googleLoginArea.innerHTML = "";
+    const btnGoogle = document.createElement("button");
+    btnGoogle.innerText = "Entrar com Google";
+    btnGoogle.className = "btn btn-light full";
+    btnGoogle.type = "button";
+    btnGoogle.addEventListener("click", entrarComGoogle);
+    googleLoginArea.appendChild(btnGoogle);
+  }
+
+  welcomeGoogleBtn?.addEventListener("click", entrarComGoogle);
+
+  closeWelcomePopup?.addEventListener("click", () => {
+    fecharWelcomePopup(true);
+  });
+
+  welcomeLaterBtn?.addEventListener("click", () => {
+    fecharWelcomePopup(true);
+  });
+
+  loginToggle?.addEventListener("click", () => {
+    const isLogged = loginToggle.getAttribute("data-logged");
+    if (isLogged) {
+      irParaPerfil();
+    } else {
+      abrirPainelLogin();
+    }
+  });
+
+  mobileLoginToggle?.addEventListener("click", () => {
+    const isLogged = mobileLoginToggle.getAttribute("data-logged");
+    if (isLogged) {
+      irParaPerfil();
+    } else {
+      abrirPainelLogin();
+    }
+  });
+
+  try {
+    await setPersistence(auth, browserLocalPersistence);
+
+    const redirectResult = await getRedirectResult(auth);
+    if (redirectResult?.user) {
+      setLoggedUI(redirectResult.user);
+    }
+  } catch (error) {
+    console.error("Erro no retorno do login com Google:", error);
+  }
+
+  onAuthStateChanged(auth, (user) => {
+    if (user) {
+      setLoggedUI(user);
+    } else {
+      setLoggedOutUI();
+    }
+  });
+
+  window.firebaseAuth = auth;
+  window.firebaseUser = () => auth.currentUser;
+</script>
 </body>
 </html>

@@ -494,25 +494,6 @@ document.getElementById("favoritesToggle")?.addEventListener("click", () => {
   openPanel("favoritesPanel");
 });
 
-document.getElementById("loginToggle")?.addEventListener("click", () => {
-  const isLogged = document.getElementById("loginToggle")?.getAttribute("data-logged");
-  if (!isLogged) {
-    openPanel("loginPanel");
-  } else {
-    window.location.href = "perfil.html";
-  }
-});
-
-document.getElementById("mobileLoginToggle")?.addEventListener("click", () => {
-  const isLogged = document.getElementById("loginToggle")?.getAttribute("data-logged");
-  if (!isLogged) {
-    openPanel("loginPanel");
-    document.getElementById("mobileNav")?.classList.remove("open");
-  } else {
-    window.location.href = "perfil.html";
-  }
-});
-
 document.querySelectorAll("[data-close]").forEach((button) => {
   button.addEventListener("click", closePanels);
 });
@@ -704,3 +685,5 @@ window.addToCart = addToCart;
 window.toggleFavorite = toggleFavorite;
 window.removeFromCart = removeFromCart;
 window.removeFavorite = removeFavorite;
+window.openPanel = openPanel;
+window.closePanels = closePanels;

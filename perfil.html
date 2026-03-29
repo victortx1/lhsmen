@@ -150,6 +150,7 @@
       object-fit: cover;
       border: 2px solid rgba(255,255,255,0.14);
       background: rgba(255,255,255,0.05);
+      display: none;
     }
 
     .avatar-placeholder {
@@ -524,24 +525,13 @@
   </section>
 
   <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import { auth } from "./firebase.js";
     import {
-      getAuth,
       onAuthStateChanged,
-      signOut
+      signOut,
+      setPersistence,
+      browserLocalPersistence
     } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-
-    const firebaseConfig = {
-      apiKey: "AIzaSyDHMuEZVIzlQ9xSDM2nThZUB75EthZZ46Y",
-      authDomain: "lhs-men.firebaseapp.com",
-      projectId: "lhs-men",
-      storageBucket: "lhs-men.firebasestorage.app",
-      messagingSenderId: "1046262755270",
-      appId: "1:1046262755270:web:97b7f07c2dca01d6b20cc7"
-    };
-
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
 
     const profilePage = document.getElementById("profilePage");
     const loginRequired = document.getElementById("loginRequired");
@@ -567,7 +557,8 @@
     function readLocalArray(key) {
       try {
         const raw = localStorage.getItem(key);
-        return raw ? JSON.parse(raw) : [];
+        const parsed = raw ? JSON.parse(raw) : [];
+        return Array.isArray(parsed) ? parsed : [];
       } catch {
         return [];
       }
@@ -583,6 +574,13 @@
       return [];
     }
 
+    function formatPrice(value) {
+      return Number(value || 0).toLocaleString("pt-BR", {
+        style: "currency",
+        currency: "BRL"
+      });
+    }
+
     function renderSimpleList(container, items, emptyText, type) {
       if (!items.length) {
         container.innerHTML = `<div class="empty-state">${emptyText}</div>`;
@@ -596,7 +594,7 @@
 
         const description =
           type === "cart"
-            ? `Quantidade: ${quantity}${priceValue ? ` • R$ ${priceValue.toFixed(2).replace(".", ",")}` : ""}`
+            ? `Quantidade: ${quantity}${priceValue ? ` • ${formatPrice(priceValue)}` : ""}`
             : "Produto salvo na sua conta.";
 
         return `
@@ -608,68 +606,98 @@
       }).join("");
     }
 
-    onAuthStateChanged(auth, (user) => {
-      if (!user) {
-        profilePage.style.display = "none";
-        loginRequired.style.display = "flex";
-        return;
+    function showPlaceholder(name = "LHS") {
+      profilePhoto.style.display = "none";
+      profilePhoto.removeAttribute("src");
+      profilePlaceholder.textContent = getInitials(name);
+      profilePlaceholder.style.display = "flex";
+    }
+
+    async function initProfile() {
+      try {
+        await setPersistence(auth, browserLocalPersistence);
+      } catch (error) {
+        console.error("Erro ao aplicar persistência:", error);
       }
 
-      profilePage.style.display = "block";
-      loginRequired.style.display = "none";
+      onAuthStateChanged(auth, (user) => {
+        if (!user) {
+          profilePage.style.display = "none";
+          loginRequired.style.display = "flex";
+          return;
+        }
 
-      profileName.textContent = user.displayName || "Cliente LHS MEN";
-      profileEmail.textContent = user.email || "Sem email";
-      profilePlaceholder.textContent = getInitials(user.displayName || "LHS");
+        profilePage.style.display = "block";
+        loginRequired.style.display = "none";
 
-      if (user.photoURL) {
-        profilePhoto.src = user.photoURL;
-        profilePhoto.style.display = "block";
-        profilePlaceholder.style.display = "none";
-      } else {
-        profilePhoto.style.display = "none";
-        profilePlaceholder.style.display = "flex";
-      }
+        const userName = user.displayName || "Cliente LHS MEN";
+        const userEmail = user.email || "Sem email";
 
-      const favorites = readFirstAvailableArray([
-        "lhsmen_favorites",
-        "favorites",
-        "lhsmenFavorites",
-        "favoritos"
-      ]);
+        profileName.textContent = userName;
+        profileEmail.textContent = userEmail;
 
-      const cart = readFirstAvailableArray([
-        "lhsmen_cart",
-        "cart",
-        "lhsmenCart",
-        "carrinho"
-      ]);
+        if (user.photoURL) {
+          profilePhoto.src = user.photoURL;
+          profilePhoto.style.display = "block";
+          profilePlaceholder.style.display = "none";
+        } else {
+          showPlaceholder(userName);
+        }
 
-      favoriteTotal.textContent = favorites.length;
-      cartTotalItems.textContent = cart.reduce((acc, item) => acc + (item.quantity || item.qty || 1), 0);
+        const favorites = readFirstAvailableArray([
+          "lhsmen_favorites",
+          "favorites",
+          "lhsmenFavorites",
+          "favoritos"
+        ]);
 
-      renderSimpleList(
-        favoriteList,
-        favorites,
-        "Nenhum favorito salvo ainda.",
-        "favorite"
-      );
+        const cart = readFirstAvailableArray([
+          "lhsmen_cart",
+          "cart",
+          "lhsmenCart",
+          "carrinho"
+        ]);
 
-      renderSimpleList(
-        cartList,
-        cart,
-        "Seu carrinho está vazio no momento.",
-        "cart"
-      );
+        favoriteTotal.textContent = favorites.length;
+        cartTotalItems.textContent = cart.reduce(
+          (acc, item) => acc + (item.quantity || item.qty || 1),
+          0
+        );
+
+        renderSimpleList(
+          favoriteList,
+          favorites,
+          "Nenhum favorito salvo ainda.",
+          "favorite"
+        );
+
+        renderSimpleList(
+          cartList,
+          cart,
+          "Seu carrinho está vazio no momento.",
+          "cart"
+        );
+      });
+    }
+
+    profilePhoto?.addEventListener("error", () => {
+      showPlaceholder(profileName.textContent || "LHS");
     });
 
-    logoutBtn.addEventListener("click", async () => {
+    logoutBtn?.addEventListener("click", async () => {
       const sair = confirm("Deseja sair da conta?");
       if (!sair) return;
 
-      await signOut(auth);
-      window.location.href = "index.html";
+      try {
+        await signOut(auth);
+        window.location.href = "index.html";
+      } catch (error) {
+        console.error("Erro ao sair:", error);
+        alert("Não foi possível sair da conta.");
+      }
     });
+
+    initProfile();
   </script>
 </body>
 </html>
