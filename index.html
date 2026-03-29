@@ -19,39 +19,38 @@
 </head>
 <body>
 
-<div id="siteLoader" class="site-loader">
-  <div class="loader-overlay"></div>
-
-  <div class="loader-content">
-    <div class="loader-logo">LHS MEN</div>
-    <div class="loader-line"></div>
-    <p class="loader-text">Carregando experiência premium...</p>
-  </div>
-</div>
-
-<div class="overlay" id="overlay"></div>
-
-<div class="welcome-popup" id="welcomePopup">
-  <div class="welcome-popup-box">
-    <button class="welcome-close" id="closeWelcomePopup" type="button">✕</button>
-
-    <span class="welcome-badge">BEM-VINDO À LHS MEN</span>
-    <h2>Entre com sua conta Google</h2>
-    <p>
-      Crie sua conta ou entre agora para acessar seu perfil, salvar seus favoritos
-      e ter uma experiência mais completa dentro da LHS MEN.
-    </p>
-
-    <div class="welcome-actions">
-      <button class="btn btn-light full" id="welcomeGoogleBtn" type="button">
-        Entrar com Google
-      </button>
-      <button class="btn btn-outline full" id="welcomeLaterBtn" type="button">
-        Agora não
-      </button>
+  <div id="siteLoader" class="site-loader">
+    <div class="loader-overlay"></div>
+    <div class="loader-content">
+      <div class="loader-logo">LHS MEN</div>
+      <div class="loader-line"></div>
+      <p class="loader-text">Carregando experiência premium...</p>
     </div>
   </div>
-</div>
+
+  <div class="overlay" id="overlay"></div>
+
+  <div class="welcome-popup" id="welcomePopup">
+    <div class="welcome-popup-box">
+      <button class="welcome-close" id="closeWelcomePopup" type="button">✕</button>
+
+      <span class="welcome-badge">BEM-VINDO À LHS MEN</span>
+      <h2>Entre com sua conta Google</h2>
+      <p>
+        Crie sua conta ou entre agora para acessar seu perfil, salvar seus favoritos
+        e ter uma experiência mais completa dentro da LHS MEN.
+      </p>
+
+      <div class="welcome-actions">
+        <button class="btn btn-light full" id="welcomeGoogleBtn" type="button">
+          Entrar com Google
+        </button>
+        <button class="btn btn-outline full" id="welcomeLaterBtn" type="button">
+          Agora não
+        </button>
+      </div>
+    </div>
+  </div>
 
   <div class="noise"></div>
   <div class="cursor-glow"></div>
@@ -85,7 +84,10 @@
           🛍 <span class="badge" id="cartCount">0</span>
         </button>
 
-        <button class="login-btn" id="loginToggle" type="button">Entrar</button>
+        <button class="profile-btn" id="loginToggle" type="button" title="Perfil">
+          <span id="profileIcon">👤</span>
+        </button>
+
         <button class="menu-toggle" id="menuToggle" type="button">☰</button>
       </div>
     </div>
@@ -561,239 +563,247 @@
     </div>
   </aside>
 
-  <div class="overlay" id="overlay"></div>
-
-  --- overley ---
   <script>
-  document.addEventListener("DOMContentLoaded", () => {
-    const loader = document.getElementById("siteLoader");
+    document.addEventListener("DOMContentLoaded", () => {
+      const loader = document.getElementById("siteLoader");
 
-    if (!loader) return;
+      if (!loader) return;
 
-    const alreadyShown = sessionStorage.getItem("lhsmen_loader_shown");
+      const alreadyShown = sessionStorage.getItem("lhsmen_loader_shown");
 
-    if (alreadyShown) {
-      loader.style.display = "none";
-      return;
-    }
+      if (alreadyShown) {
+        loader.style.display = "none";
+        return;
+      }
 
-    sessionStorage.setItem("lhsmen_loader_shown", "true");
+      sessionStorage.setItem("lhsmen_loader_shown", "true");
+      document.body.style.overflow = "hidden";
 
-    document.body.style.overflow = "hidden";
-
-    window.addEventListener("load", () => {
-      setTimeout(() => {
-        loader.classList.add("hidden");
-        document.body.style.overflow = "";
-
+      window.addEventListener("load", () => {
         setTimeout(() => {
-          loader.remove();
-        }, 700);
-      }, 1800);
+          loader.classList.add("hidden");
+          document.body.style.overflow = "";
+
+          setTimeout(() => {
+            loader.remove();
+          }, 700);
+        }, 1800);
+      });
     });
-  });
-</script>
+  </script>
 
   <script type="module" src="script.js"></script>
 
-<script type="module">
-  import { auth } from "./firebase.js";
-  import {
-    GoogleAuthProvider,
-    signInWithPopup,
-    signInWithRedirect,
-    getRedirectResult,
-    onAuthStateChanged,
-    setPersistence,
-    browserLocalPersistence
-  } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+  <script type="module">
+    import { auth } from "./firebase.js";
+    import {
+      GoogleAuthProvider,
+      signInWithPopup,
+      signInWithRedirect,
+      getRedirectResult,
+      onAuthStateChanged,
+      setPersistence,
+      browserLocalPersistence
+    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
-  const OWNER_EMAILS = ["victoj796@gmail.com"];
-  const provider = new GoogleAuthProvider();
+    const OWNER_EMAILS = ["victoj796@gmail.com"];
+    const provider = new GoogleAuthProvider();
+    const WELCOME_POPUP_KEY = "lhsmen_welcome_popup_seen";
 
-  const WELCOME_POPUP_KEY = "lhsmen_welcome_popup_seen";
+    const googleLoginArea = document.getElementById("googleLoginArea");
+    const loginToggle = document.getElementById("loginToggle");
+    const profileIcon = document.getElementById("profileIcon");
+    const mobileLoginToggle = document.getElementById("mobileLoginToggle");
+    const loginPanel = document.getElementById("loginPanel");
+    const overlay = document.getElementById("overlay");
+    const adminLink = document.getElementById("adminLink");
+    const mobileNav = document.getElementById("mobileNav");
 
-  const googleLoginArea = document.getElementById("googleLoginArea");
-  const loginToggle = document.getElementById("loginToggle");
-  const mobileLoginToggle = document.getElementById("mobileLoginToggle");
-  const loginPanel = document.getElementById("loginPanel");
-  const overlay = document.getElementById("overlay");
-  const adminLink = document.getElementById("adminLink");
-  const mobileNav = document.getElementById("mobileNav");
+    const welcomePopup = document.getElementById("welcomePopup");
+    const closeWelcomePopup = document.getElementById("closeWelcomePopup");
+    const welcomeLaterBtn = document.getElementById("welcomeLaterBtn");
+    const welcomeGoogleBtn = document.getElementById("welcomeGoogleBtn");
 
-  const welcomePopup = document.getElementById("welcomePopup");
-  const closeWelcomePopup = document.getElementById("closeWelcomePopup");
-  const welcomeLaterBtn = document.getElementById("welcomeLaterBtn");
-  const welcomeGoogleBtn = document.getElementById("welcomeGoogleBtn");
+    function isMobileDevice() {
+      return /Android|iPhone|iPad|iPod|Opera Mini|IEMobile|WPDesktop/i.test(navigator.userAgent)
+        || window.innerWidth <= 768;
+    }
 
-  function isMobileDevice() {
-    return /Android|iPhone|iPad|iPod|Opera Mini|IEMobile|WPDesktop/i.test(navigator.userAgent)
-      || window.innerWidth <= 768;
-  }
+    function fecharPainelLogin() {
+      if (loginPanel) loginPanel.classList.remove("open");
+      if (overlay) overlay.classList.remove("show");
+      if (mobileNav) mobileNav.classList.remove("open");
+      document.body.classList.remove("panel-open");
+    }
 
-  function fecharPainelLogin() {
-    if (loginPanel) loginPanel.classList.remove("open");
-    if (overlay) overlay.classList.remove("show");
-    if (mobileNav) mobileNav.classList.remove("open");
-    document.body.classList.remove("panel-open");
-  }
-
-  function abrirPainelLogin() {
-    if (loginPanel) loginPanel.classList.add("open");
-    if (overlay) overlay.classList.add("show");
-    document.body.classList.add("panel-open");
-  }
-
-  function irParaPerfil() {
-    window.location.href = "perfil.html";
-  }
-
-  function mostrarWelcomePopup() {
-    if (welcomePopup) {
-      welcomePopup.classList.add("show");
+    function abrirPainelLogin() {
+      if (loginPanel) loginPanel.classList.add("open");
+      if (overlay) overlay.classList.add("show");
       document.body.classList.add("panel-open");
     }
-  }
 
-  function fecharWelcomePopup(salvar = true) {
-    if (welcomePopup) {
-      welcomePopup.classList.remove("show");
+    function irParaPerfil() {
+      window.location.href = "perfil.html";
     }
 
-    document.body.classList.remove("panel-open");
-
-    if (salvar) {
-      localStorage.setItem(WELCOME_POPUP_KEY, "true");
+    function mostrarWelcomePopup() {
+      if (welcomePopup) {
+        welcomePopup.classList.add("show");
+        document.body.classList.add("panel-open");
+      }
     }
-  }
 
-  async function entrarComGoogle() {
+    function fecharWelcomePopup(salvar = true) {
+      if (welcomePopup) {
+        welcomePopup.classList.remove("show");
+      }
+
+      document.body.classList.remove("panel-open");
+
+      if (salvar) {
+        localStorage.setItem(WELCOME_POPUP_KEY, "true");
+      }
+    }
+
+    async function entrarComGoogle() {
+      try {
+        await setPersistence(auth, browserLocalPersistence);
+        localStorage.setItem(WELCOME_POPUP_KEY, "true");
+
+        if (isMobileDevice()) {
+          await signInWithRedirect(auth, provider);
+        } else {
+          await signInWithPopup(auth, provider);
+        }
+      } catch (error) {
+        console.error("Erro no login com Google:", error);
+        alert("Não foi possível entrar com Google.");
+      }
+    }
+
+    if (googleLoginArea) {
+      googleLoginArea.innerHTML = "";
+
+      const btnGoogle = document.createElement("button");
+      btnGoogle.innerText = "Entrar com Google";
+      btnGoogle.className = "btn btn-light full";
+      btnGoogle.type = "button";
+
+      btnGoogle.addEventListener("click", entrarComGoogle);
+      googleLoginArea.appendChild(btnGoogle);
+    }
+
+    if (welcomeGoogleBtn) {
+      welcomeGoogleBtn.addEventListener("click", entrarComGoogle);
+    }
+
+    if (closeWelcomePopup) {
+      closeWelcomePopup.addEventListener("click", () => {
+        fecharWelcomePopup(true);
+      });
+    }
+
+    if (welcomeLaterBtn) {
+      welcomeLaterBtn.addEventListener("click", () => {
+        fecharWelcomePopup(true);
+      });
+    }
+
+    if (loginToggle) {
+      loginToggle.addEventListener("click", () => {
+        const isLogged = loginToggle.getAttribute("data-logged");
+        if (isLogged) {
+          irParaPerfil();
+        } else {
+          abrirPainelLogin();
+        }
+      });
+    }
+
+    if (mobileLoginToggle) {
+      mobileLoginToggle.addEventListener("click", () => {
+        const isLogged = mobileLoginToggle.getAttribute("data-logged");
+        if (isLogged) {
+          irParaPerfil();
+        } else {
+          abrirPainelLogin();
+        }
+      });
+    }
+
     try {
-      await setPersistence(auth, browserLocalPersistence);
-
-      localStorage.setItem(WELCOME_POPUP_KEY, "true");
-
-      if (isMobileDevice()) {
-        await signInWithRedirect(auth, provider);
-      } else {
-        await signInWithPopup(auth, provider);
-      }
+      await getRedirectResult(auth);
     } catch (error) {
-      console.error("Erro no login com Google:", error);
-      alert("Não foi possível entrar com Google.");
+      console.error("Erro no retorno do login com Google:", error);
     }
-  }
 
-  if (googleLoginArea) {
-    googleLoginArea.innerHTML = "";
+    function atualizarBotoesUsuario(user) {
+      if (user) {
+        const nome = user.displayName || "Minha conta";
+        const email = (user.email || "").toLowerCase();
+        const foto = user.photoURL;
+        const isOwner = OWNER_EMAILS.includes(email);
 
-    const btnGoogle = document.createElement("button");
-    btnGoogle.innerText = "Entrar com Google";
-    btnGoogle.className = "btn btn-light full";
-    btnGoogle.type = "button";
+        if (loginToggle) {
+          loginToggle.setAttribute("data-logged", "true");
+          loginToggle.setAttribute("title", nome);
+        }
 
-    btnGoogle.addEventListener("click", entrarComGoogle);
-    googleLoginArea.appendChild(btnGoogle);
-  }
+        if (mobileLoginToggle) {
+          mobileLoginToggle.innerText = nome;
+          mobileLoginToggle.setAttribute("data-logged", "true");
+        }
 
-  if (welcomeGoogleBtn) {
-    welcomeGoogleBtn.addEventListener("click", entrarComGoogle);
-  }
+        if (profileIcon) {
+          if (foto) {
+            profileIcon.innerHTML = `<img src="${foto}" alt="${nome}">`;
+          } else {
+            profileIcon.textContent = nome.charAt(0).toUpperCase();
+          }
+        }
 
-  if (closeWelcomePopup) {
-    closeWelcomePopup.addEventListener("click", () => {
-      fecharWelcomePopup(true);
-    });
-  }
+        if (adminLink) {
+          adminLink.style.display = isOwner ? "inline-block" : "none";
+        }
 
-  if (welcomeLaterBtn) {
-    welcomeLaterBtn.addEventListener("click", () => {
-      fecharWelcomePopup(true);
-    });
-  }
-
-  if (loginToggle) {
-    loginToggle.addEventListener("click", () => {
-      const isLogged = loginToggle.getAttribute("data-logged");
-      if (isLogged) {
-        irParaPerfil();
+        localStorage.setItem(WELCOME_POPUP_KEY, "true");
+        fecharWelcomePopup(false);
+        fecharPainelLogin();
       } else {
-        abrirPainelLogin();
-      }
-    });
-  }
+        if (loginToggle) {
+          loginToggle.removeAttribute("data-logged");
+          loginToggle.setAttribute("title", "Entrar");
+        }
 
-  if (mobileLoginToggle) {
-    mobileLoginToggle.addEventListener("click", () => {
-      const isLogged = mobileLoginToggle.getAttribute("data-logged");
-      if (isLogged) {
-        irParaPerfil();
-      } else {
-        abrirPainelLogin();
-      }
-    });
-  }
+        if (mobileLoginToggle) {
+          mobileLoginToggle.innerText = "Entrar";
+          mobileLoginToggle.removeAttribute("data-logged");
+        }
 
-  try {
-    await getRedirectResult(auth);
-  } catch (error) {
-    console.error("Erro no retorno do login com Google:", error);
-  }
+        if (profileIcon) {
+          profileIcon.textContent = "👤";
+        }
 
-  function atualizarBotoesUsuario(user) {
-    if (user) {
-      const nome = user.displayName || "Minha conta";
-      const email = (user.email || "").toLowerCase();
-      const isOwner = OWNER_EMAILS.includes(email);
+        if (adminLink) {
+          adminLink.style.display = "none";
+        }
 
-      if (loginToggle) {
-        loginToggle.innerText = nome;
-        loginToggle.setAttribute("data-logged", "true");
-      }
+        const jaViuPopup = localStorage.getItem(WELCOME_POPUP_KEY);
 
-      if (mobileLoginToggle) {
-        mobileLoginToggle.innerText = nome;
-        mobileLoginToggle.setAttribute("data-logged", "true");
-      }
-
-      if (adminLink) {
-        adminLink.style.display = isOwner ? "inline-block" : "none";
-      }
-
-      localStorage.setItem(WELCOME_POPUP_KEY, "true");
-      fecharWelcomePopup(false);
-      fecharPainelLogin();
-    } else {
-      if (loginToggle) {
-        loginToggle.innerText = "Entrar";
-        loginToggle.removeAttribute("data-logged");
-      }
-
-      if (mobileLoginToggle) {
-        mobileLoginToggle.innerText = "Entrar";
-        mobileLoginToggle.removeAttribute("data-logged");
-      }
-
-      if (adminLink) {
-        adminLink.style.display = "none";
-      }
-
-      const jaViuPopup = localStorage.getItem(WELCOME_POPUP_KEY);
-
-      if (!jaViuPopup) {
-        setTimeout(() => {
-          mostrarWelcomePopup();
-        }, 900);
+        if (!jaViuPopup) {
+          setTimeout(() => {
+            mostrarWelcomePopup();
+          }, 900);
+        }
       }
     }
-  }
 
-  onAuthStateChanged(auth, (user) => {
-    atualizarBotoesUsuario(user);
-  });
+    onAuthStateChanged(auth, (user) => {
+      atualizarBotoesUsuario(user);
+    });
 
-  window.firebaseAuth = auth;
-  window.firebaseUser = () => auth.currentUser;
-</script>
+    window.firebaseAuth = auth;
+    window.firebaseUser = () => auth.currentUser;
+  </script>
 </body>
 </html>
