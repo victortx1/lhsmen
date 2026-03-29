@@ -1,3 +1,4 @@
+import { auth, googleProvider } from "./firebase.js";
 import {
   signInWithPopup,
   signInWithRedirect,
@@ -6,123 +7,65 @@ import {
   signOut
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
-import { auth, provider, initAuthPersistence } from "./firebase.js";
-
-function isMobileDevice() {
+function isMobile() {
   return /Android|iPhone|iPad|iPod|Opera Mini|IEMobile|WPDesktop/i.test(navigator.userAgent);
 }
 
-function saveUserToLocal(user) {
-  if (!user) return;
-
-  const userData = {
-    uid: user.uid,
-    name: user.displayName || "",
-    email: user.email || "",
-    photo: user.photoURL || ""
-  };
-
-  localStorage.setItem("lhsmen_user", JSON.stringify(userData));
-}
-
-function removeUserFromLocal() {
-  localStorage.removeItem("lhsmen_user");
-}
-
-function updateUIForLoggedUser(user) {
-  const loginToggle = document.getElementById("loginToggle");
-  const mobileLoginToggle = document.getElementById("mobileLoginToggle");
-  const userNameEls = document.querySelectorAll("[data-user-name]");
-  const userPhotoEls = document.querySelectorAll("[data-user-photo]");
-
-  if (user) {
-    saveUserToLocal(user);
-
-    if (loginToggle) {
-      loginToggle.setAttribute("data-logged", "true");
-      loginToggle.textContent = "Meu Perfil";
-    }
-
-    if (mobileLoginToggle) {
-      mobileLoginToggle.setAttribute("data-logged", "true");
-      mobileLoginToggle.textContent = "Meu Perfil";
-    }
-
-    userNameEls.forEach((el) => {
-      el.textContent = user.displayName || "Cliente";
-    });
-
-    userPhotoEls.forEach((el) => {
-      if ("src" in el && user.photoURL) {
-        el.src = user.photoURL;
-      }
-    });
-  } else {
-    removeUserFromLocal();
-
-    if (loginToggle) {
-      loginToggle.removeAttribute("data-logged");
-      loginToggle.textContent = "Entrar";
-    }
-
-    if (mobileLoginToggle) {
-      mobileLoginToggle.removeAttribute("data-logged");
-      mobileLoginToggle.textContent = "Entrar";
-    }
-
-    userNameEls.forEach((el) => {
-      el.textContent = "Visitante";
-    });
-
-    userPhotoEls.forEach((el) => {
-      if ("src" in el) {
-        el.src = "";
-      }
-    });
-  }
-}
-
-export async function loginWithGoogle() {
+async function loginWithGoogle() {
   try {
-    await initAuthPersistence();
-
-    if (isMobileDevice()) {
-      await signInWithRedirect(auth, provider);
+    if (isMobile()) {
+      await signInWithRedirect(auth, googleProvider);
       return;
+    } else {
+      await signInWithPopup(auth, googleProvider);
     }
-
-    await signInWithPopup(auth, provider);
   } catch (error) {
     console.error("Erro no login com Google:", error);
     alert("Não foi possível entrar com Google.");
   }
 }
 
-export async function handleRedirectLogin() {
+async function handleRedirectLogin() {
   try {
-    await initAuthPersistence();
     const result = await getRedirectResult(auth);
-
     if (result?.user) {
-      saveUserToLocal(result.user);
+      console.log("Login via redirect concluído:", result.user);
     }
   } catch (error) {
-    console.error("Erro ao finalizar login por redirecionamento:", error);
+    console.error("Erro ao processar redirect:", error);
   }
 }
 
-export function monitorAuth() {
-  onAuthStateChanged(auth, (user) => {
-    updateUIForLoggedUser(user);
-  });
+function updateUI(user) {
+  const loginBtn = document.getElementById("loginBtn");
+  const userName = document.getElementById("userName");
+  const userPhoto = document.getElementById("userPhoto");
+  const profileArea = document.getElementById("profileArea");
+
+  if (user) {
+    if (loginBtn) loginBtn.style.display = "none";
+    if (profileArea) profileArea.style.display = "flex";
+    if (userName) userName.textContent = user.displayName || "Usuário";
+    if (userPhoto) userPhoto.src = user.photoURL || "";
+  } else {
+    if (loginBtn) loginBtn.style.display = "block";
+    if (profileArea) profileArea.style.display = "none";
+  }
 }
 
-export async function logoutUser() {
+onAuthStateChanged(auth, (user) => {
+  console.log("Estado do usuário:", user);
+  updateUI(user);
+});
+
+handleRedirectLogin();
+
+window.loginWithGoogle = loginWithGoogle;
+
+window.logoutGoogle = async function () {
   try {
     await signOut(auth);
-    removeUserFromLocal();
-    window.location.href = "index.html";
   } catch (error) {
-    console.error("Erro ao sair da conta:", error);
+    console.error("Erro ao sair:", error);
   }
-}
+};
