@@ -1,3 +1,12 @@
+import { db } from "./firebase.js";
+import {
+  collection,
+  doc,
+  setDoc,
+  deleteDoc,
+  getDocs
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
 const STORAGE_KEY = "lhsmen_products";
 
 const defaultProducts = [
@@ -27,22 +36,27 @@ const defaultProducts = [
   }
 ];
 
-function loadProducts() {
+function saveProductsLocal(list) {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(list));
+}
+
+function loadProductsLocal() {
   const saved = localStorage.getItem(STORAGE_KEY);
 
   if (saved) {
     try {
-      return JSON.parse(saved);
+      const parsed = JSON.parse(saved);
+      if (Array.isArray(parsed)) return parsed;
     } catch (error) {
-      console.error("Erro ao carregar produtos:", error);
+      console.error("Erro ao carregar produtos do localStorage:", error);
     }
   }
 
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(defaultProducts));
+  saveProductsLocal(defaultProducts);
   return [...defaultProducts];
 }
 
-let products = loadProducts();
+let products = loadProductsLocal();
 
 const productForm = document.getElementById("productForm");
 const productTableBody = document.getElementById("productTableBody");
@@ -57,10 +71,6 @@ const totalProducts = document.getElementById("totalProducts");
 const totalFeatured = document.getElementById("totalFeatured");
 const totalBestsellers = document.getElementById("totalBestsellers");
 const totalSales = document.getElementById("totalSales");
-
-function saveProducts() {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(products));
-}
 
 function formatPrice(value) {
   return Number(value || 0).toLocaleString("pt-BR", {
@@ -110,6 +120,7 @@ function renderTable() {
   }
 
   productTableBody.innerHTML = products
+    .sort((a, b) => b.id - a.id)
     .map((product) => `
       <tr>
         <td>
@@ -181,14 +192,21 @@ function editProduct(id) {
   window.scrollTo({ top: 0, behavior: "smooth" });
 }
 
-function deleteProduct(id) {
+async function deleteProduct(id) {
   const confirmDelete = confirm("Tem certeza que deseja excluir este produto?");
   if (!confirmDelete) return;
 
-  products = products.filter((product) => product.id !== id);
-  saveProducts();
-  renderTable();
-  resetForm();
+  try {
+    await deleteDoc(doc(db, "produtos", String(id)));
+    products = products.filter((product) => product.id !== id);
+    saveProductsLocal(products);
+    renderTable();
+    resetForm();
+    alert("Produto excluído com sucesso.");
+  } catch (error) {
+    console.error("Erro ao excluir produto:", error);
+    alert("Erro ao excluir produto no Firestore.");
+  }
 }
 
 function getFormData() {
@@ -208,23 +226,75 @@ function getFormData() {
   };
 }
 
+async function loadProductsFromFirestore() {
+  try {
+    const snapshot = await getDocs(collection(db, "produtos"));
+
+    if (snapshot.empty) {
+      products = loadProductsLocal();
+      renderTable();
+      return;
+    }
+
+    products = snapshot.docs
+      .map((docSnap) => {
+        const data = docSnap.data();
+        return {
+          id: Number(data.id),
+          name: data.name || "Produto sem nome",
+          category: data.category || "camisetas",
+          price: Number(data.price || 0),
+          oldPrice: data.oldPrice !== undefined && data.oldPrice !== null && data.oldPrice !== ""
+            ? Number(data.oldPrice)
+            : null,
+          sale: data.sale || "",
+          description: data.description || "",
+          image: data.image || "",
+          featured: !!data.featured,
+          bestseller: !!data.bestseller
+        };
+      })
+      .sort((a, b) => b.id - a.id);
+
+    saveProductsLocal(products);
+    renderTable();
+  } catch (error) {
+    console.error("Erro ao carregar Firestore:", error);
+    products = loadProductsLocal();
+    renderTable();
+  }
+}
+
 if (productForm) {
-  productForm.addEventListener("submit", (e) => {
+  productForm.addEventListener("submit", async (e) => {
     e.preventDefault();
 
     const data = getFormData();
-    const existingIndex = products.findIndex((product) => product.id === data.id);
 
-    if (existingIndex >= 0) {
-      products[existingIndex] = data;
-    } else {
-      products.unshift(data);
+    if (!data.name || !data.category || !data.price) {
+      alert("Preencha nome, categoria e preço.");
+      return;
     }
 
-    saveProducts();
-    renderTable();
-    resetForm();
-    alert("Produto salvo com sucesso.");
+    try {
+      await setDoc(doc(db, "produtos", String(data.id)), data);
+
+      const existingIndex = products.findIndex((product) => product.id === data.id);
+
+      if (existingIndex >= 0) {
+        products[existingIndex] = data;
+      } else {
+        products.unshift(data);
+      }
+
+      saveProductsLocal(products);
+      renderTable();
+      resetForm();
+      alert("Produto salvo com sucesso.");
+    } catch (error) {
+      console.error("Erro ao salvar produto:", error);
+      alert("Erro ao salvar produto no Firestore.");
+    }
   });
 }
 
@@ -232,12 +302,16 @@ if (imageFileInput) {
   imageFileInput.addEventListener("change", (event) => {
     const file = event.target.files[0];
 
-    if (!file) {
-      return;
-    }
+    if (!file) return;
 
     if (!file.type.startsWith("image/")) {
       alert("Escolha apenas arquivos de imagem.");
+      imageFileInput.value = "";
+      return;
+    }
+
+    if (file.size > 700 * 1024) {
+      alert("A imagem está muito grande. Escolha uma imagem menor que 700KB.");
       imageFileInput.value = "";
       return;
     }
@@ -263,20 +337,40 @@ if (cancelEditBtn) {
 }
 
 if (resetAllBtn) {
-  resetAllBtn.addEventListener("click", () => {
+  resetAllBtn.addEventListener("click", async () => {
     const confirmed = confirm("Isso vai apagar todos os produtos salvos no painel. Deseja continuar?");
     if (!confirmed) return;
 
-    localStorage.removeItem(STORAGE_KEY);
-    products = [...defaultProducts];
-    saveProducts();
-    renderTable();
-    resetForm();
+    try {
+      const snapshot = await getDocs(collection(db, "produtos"));
+
+      const promises = snapshot.docs.map((docSnap) =>
+        deleteDoc(doc(db, "produtos", docSnap.id))
+      );
+
+      await Promise.all(promises);
+
+      products = [...defaultProducts];
+
+      const recreatePromises = products.map((product) =>
+        setDoc(doc(db, "produtos", String(product.id)), product)
+      );
+
+      await Promise.all(recreatePromises);
+
+      saveProductsLocal(products);
+      renderTable();
+      resetForm();
+      alert("Produtos resetados com sucesso.");
+    } catch (error) {
+      console.error("Erro ao resetar produtos:", error);
+      alert("Erro ao limpar os produtos no Firestore.");
+    }
   });
 }
 
-renderTable();
 renderPreview("");
+loadProductsFromFirestore();
 
 window.editProduct = editProduct;
 window.deleteProduct = deleteProduct;

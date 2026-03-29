@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
-
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -8,7 +7,7 @@
   <link rel="stylesheet" href="admin.css" />
 </head>
 
-<body>
+<body style="display: none;">
   <div class="admin-layout">
     <aside class="sidebar">
       <div class="brand">
@@ -32,7 +31,7 @@
           <h2>Painel administrativo</h2>
           <p>Gerencie produtos, preços, promoções e imagens da LHS MEN.</p>
         </div>
-        <button class="logout-btn" id="resetAllBtn">Limpar tudo</button>
+        <button class="logout-btn" id="resetAllBtn" type="button">Limpar tudo</button>
       </header>
 
       <section class="stats" id="dashboard">
@@ -102,36 +101,37 @@
 
             <div class="input-group">
               <label for="imageFile">Selecionar imagem</label>
-              <input type="file" id="imageFile" />
+              <input type="file" id="imageFile" accept="image/*" />
               <input type="hidden" id="image" />
             </div>
+          </div>
 
-            <div class="input-group">
-              <label>Descrição</label>
-              <textarea id="description" rows="4" placeholder="Descreva o produto..."></textarea>
-            </div>
+          <div class="input-group">
+            <label>Descrição</label>
+            <textarea id="description" rows="4" placeholder="Descreva o produto..."></textarea>
+          </div>
 
-            <div class="grid checks">
-              <label class="check-item">
-                <input type="checkbox" id="featured" />
-                <span>Produto em destaque</span>
-              </label>
+          <div class="grid checks">
+            <label class="check-item">
+              <input type="checkbox" id="featured" />
+              <span>Produto em destaque</span>
+            </label>
 
-              <label class="check-item">
-                <input type="checkbox" id="bestseller" />
-                <span>Mais vendido</span>
-              </label>
-            </div>
+            <label class="check-item">
+              <input type="checkbox" id="bestseller" />
+              <span>Mais vendido</span>
+            </label>
+          </div>
 
-            <div class="preview-box">
-              <p>Prévia da imagem</p>
-              <div class="image-preview" id="imagePreview">Sem imagem</div>
-            </div>
+          <div class="preview-box">
+            <p>Prévia da imagem</p>
+            <div class="image-preview" id="imagePreview">Sem imagem</div>
+          </div>
 
-            <div class="form-actions">
-              <button type="submit" class="primary-btn">Salvar produto</button>
-              <button type="button" class="secondary-btn" id="cancelEditBtn">Cancelar edição</button>
-            </div>
+          <div class="form-actions">
+            <button type="submit" class="primary-btn">Salvar produto</button>
+            <button type="button" class="secondary-btn" id="cancelEditBtn">Cancelar edição</button>
+          </div>
         </form>
       </section>
 
@@ -161,7 +161,26 @@
     </main>
   </div>
 
-  <script src="admin.js"></script>
-</body>
+  <script type="module">
+  import { auth } from "./firebase.js";
+  import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
+  const OWNER_EMAILS = ["victoj796@gmail.com"];
+
+  onAuthStateChanged(auth, (user) => {
+    const email = (user?.email || "").toLowerCase();
+    const isOwner = OWNER_EMAILS.includes(email);
+
+    if (!user || !isOwner) {
+      alert("Acesso restrito. Apenas os donos podem entrar no painel administrativo.");
+      window.location.href = "index.html";
+      return;
+    }
+
+    document.body.style.display = "block";
+  });
+</script>
+
+  <script type="module" src="admin.js"></script>
+</body>
 </html>

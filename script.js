@@ -1,4 +1,12 @@
+import { db } from "./firebase.js";
+import {
+  collection,
+  onSnapshot
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
 const STORAGE_KEY = "lhsmen_products";
+const CART_KEY = "lhsmen_cart";
+const FAVORITES_KEY = "lhsmen_favorites";
 
 const defaultProducts = [
   {
@@ -147,12 +155,34 @@ const defaultProducts = [
   }
 ];
 
-function loadProducts() {
+function safeReadArray(key) {
+  try {
+    const raw = localStorage.getItem(key);
+    const parsed = raw ? JSON.parse(raw) : [];
+    return Array.isArray(parsed) ? parsed : [];
+  } catch (error) {
+    console.error(`Erro ao ler ${key}:`, error);
+    return [];
+  }
+}
+
+function saveArray(key, value) {
+  localStorage.setItem(key, JSON.stringify(value));
+}
+
+function saveProducts(productsToSave) {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(productsToSave));
+}
+
+function loadProductsFromLocal() {
   const saved = localStorage.getItem(STORAGE_KEY);
 
   if (saved) {
     try {
-      return JSON.parse(saved);
+      const parsed = JSON.parse(saved);
+      if (Array.isArray(parsed) && parsed.length) {
+        return parsed;
+      }
     } catch (error) {
       console.error("Erro ao ler produtos salvos:", error);
     }
@@ -162,13 +192,13 @@ function loadProducts() {
   return [...defaultProducts];
 }
 
-let products = loadProducts();
+let products = loadProductsFromLocal();
 
 const state = {
   filter: "all",
   search: "",
-  cart: [],
-  favorites: []
+  cart: safeReadArray(CART_KEY),
+  favorites: safeReadArray(FAVORITES_KEY)
 };
 
 const productGrid = document.getElementById("productGrid");
@@ -179,6 +209,14 @@ const cartCount = document.getElementById("cartCount");
 const favoriteCount = document.getElementById("favoriteCount");
 const cartTotal = document.getElementById("cartTotal");
 const overlay = document.getElementById("overlay");
+
+function saveCart() {
+  saveArray(CART_KEY, state.cart);
+}
+
+function saveFavorites() {
+  saveArray(FAVORITES_KEY, state.favorites);
+}
 
 function formatPrice(value) {
   return Number(value || 0).toLocaleString("pt-BR", {
@@ -202,13 +240,12 @@ function getCategoryLabel(category) {
 
 function getFilteredProducts() {
   return products.filter((product) => {
-    const matchFilter =
-      state.filter === "all" || product.category === state.filter;
+    const matchFilter = state.filter === "all" || product.category === state.filter;
 
     const searchText =
       `${product.name} ${product.category} ${product.description || ""}`.toLowerCase();
 
-    const matchSearch = searchText.includes(state.search.toLowerCase());
+    const matchSearch = searchText.includes((state.search || "").toLowerCase());
 
     return matchFilter && matchSearch;
   });
@@ -229,11 +266,12 @@ function renderProductImage(product) {
 }
 
 function renderProducts() {
+  if (!productGrid) return;
+
   const filtered = getFilteredProducts();
 
   if (!filtered.length) {
-    productGrid.innerHTML =
-      `<p class="empty-state">Nenhum produto encontrado com esse filtro ou busca.</p>`;
+    productGrid.innerHTML = `<p class="empty-state">Nenhum produto encontrado com esse filtro ou busca.</p>`;
     return;
   }
 
@@ -270,13 +308,14 @@ function renderProducts() {
 }
 
 function renderBestSellers() {
+  if (!bestSellerGrid) return;
+
   const bestsellers = products
     .filter((product) => product.bestseller)
     .slice(0, 6);
 
   if (!bestsellers.length) {
-    bestSellerGrid.innerHTML =
-      `<p class="empty-state">Nenhum produto marcado como mais vendido ainda.</p>`;
+    bestSellerGrid.innerHTML = `<p class="empty-state">Nenhum produto marcado como mais vendido ainda.</p>`;
     return;
   }
 
@@ -303,7 +342,18 @@ function addToCart(productId) {
   const product = products.find((item) => item.id === productId);
   if (!product) return;
 
-  state.cart.push(product);
+  const existingItem = state.cart.find((item) => item.id === productId);
+
+  if (existingItem) {
+    existingItem.quantity = (existingItem.quantity || 1) + 1;
+  } else {
+    state.cart.push({
+      ...product,
+      quantity: 1
+    });
+  }
+
+  saveCart();
   updateCart();
   openPanel("cartPanel");
 }
@@ -319,31 +369,49 @@ function toggleFavorite(productId) {
     state.favorites = state.favorites.filter((item) => item.id !== productId);
   } else {
     const product = products.find((item) => item.id === productId);
-    if (product) state.favorites.push(product);
+    if (product) {
+      state.favorites.push(product);
+    }
   }
 
+  saveFavorites();
   updateFavorites();
   renderProducts();
 }
 
 function removeFromCart(productId) {
   const index = state.cart.findIndex((item) => item.id === productId);
-  if (index > -1) state.cart.splice(index, 1);
+  if (index === -1) return;
+
+  const item = state.cart[index];
+
+  if ((item.quantity || 1) > 1) {
+    item.quantity -= 1;
+  } else {
+    state.cart.splice(index, 1);
+  }
+
+  saveCart();
   updateCart();
 }
 
 function removeFavorite(productId) {
   state.favorites = state.favorites.filter((item) => item.id !== productId);
+  saveFavorites();
   updateFavorites();
   renderProducts();
 }
 
 function updateCart() {
-  cartCount.textContent = state.cart.length;
+  if (cartCount) {
+    const totalItems = state.cart.reduce((acc, item) => acc + (item.quantity || 1), 0);
+    cartCount.textContent = totalItems;
+  }
+
+  if (!cartItems || !cartTotal) return;
 
   if (!state.cart.length) {
-    cartItems.innerHTML =
-      `<p class="empty-state">Seu carrinho está vazio no momento.</p>`;
+    cartItems.innerHTML = `<p class="empty-state">Seu carrinho está vazio no momento.</p>`;
     cartTotal.textContent = formatPrice(0);
     return;
   }
@@ -354,23 +422,30 @@ function updateCart() {
         <h4>${item.name}</h4>
         <p>${getCategoryLabel(item.category)}${item.price ? ` • ${formatPrice(item.price)}` : ""}</p>
         <div class="item-row">
-          <strong>${formatPrice(item.price)}</strong>
+          <strong>Qtd: ${item.quantity || 1}</strong>
           <button onclick="removeFromCart(${item.id})">Remover</button>
         </div>
       </div>
     `)
     .join("");
 
-  const total = state.cart.reduce((acc, item) => acc + Number(item.price || 0), 0);
+  const total = state.cart.reduce(
+    (acc, item) => acc + (Number(item.price || 0) * (item.quantity || 1)),
+    0
+  );
+
   cartTotal.textContent = formatPrice(total);
 }
 
 function updateFavorites() {
-  favoriteCount.textContent = state.favorites.length;
+  if (favoriteCount) {
+    favoriteCount.textContent = state.favorites.length;
+  }
+
+  if (!favoriteItems) return;
 
   if (!state.favorites.length) {
-    favoriteItems.innerHTML =
-      `<p class="empty-state">Você ainda não adicionou favoritos.</p>`;
+    favoriteItems.innerHTML = `<p class="empty-state">Você ainda não adicionou favoritos.</p>`;
     return;
   }
 
@@ -397,7 +472,7 @@ function openPanel(panelId) {
 
   if (panel) {
     panel.classList.add("open");
-    overlay.classList.add("show");
+    overlay?.classList.add("show");
     document.body.classList.add("panel-open");
   }
 }
@@ -407,7 +482,7 @@ function closePanels() {
     panel.classList.remove("open");
   });
 
-  overlay.classList.remove("show");
+  overlay?.classList.remove("show");
   document.body.classList.remove("panel-open");
 }
 
@@ -420,7 +495,10 @@ document.getElementById("favoritesToggle")?.addEventListener("click", () => {
 });
 
 document.getElementById("loginToggle")?.addEventListener("click", () => {
-  openPanel("loginPanel");
+  const isLogged = document.getElementById("loginToggle")?.getAttribute("data-logged");
+  if (!isLogged) {
+    openPanel("loginPanel");
+  }
 });
 
 document.querySelectorAll("[data-close]").forEach((button) => {
@@ -475,27 +553,6 @@ document.querySelectorAll("[data-category-link]").forEach((link) => {
   });
 });
 
-document.querySelectorAll(".auth-tab").forEach((tab) => {
-  tab.addEventListener("click", () => {
-    document.querySelectorAll(".auth-tab").forEach((t) => {
-      t.classList.remove("active");
-    });
-
-    tab.classList.add("active");
-
-    const authType = tab.dataset.auth;
-    document.getElementById("loginForm")?.classList.toggle("hidden", authType !== "login");
-    document.getElementById("registerForm")?.classList.toggle("hidden", authType !== "register");
-  });
-});
-
-document.querySelectorAll(".auth-form").forEach((form) => {
-  form.addEventListener("submit", (e) => {
-    e.preventDefault();
-    alert("Exemplo visual pronto. Agora você pode integrar com backend real.");
-  });
-});
-
 const contactForm = document.querySelector(".contact-form");
 if (contactForm) {
   contactForm.addEventListener("submit", (e) => {
@@ -512,10 +569,12 @@ document.querySelectorAll(".add-look").forEach((button) => {
       id: Date.now(),
       name: `Look: ${lookName}`,
       category: "look completo",
-      price: 499.9
+      price: 499.9,
+      quantity: 1
     };
 
     state.cart.push(lookProduct);
+    saveCart();
     updateCart();
     openPanel("cartPanel");
   });
@@ -546,17 +605,87 @@ window.addEventListener("mousemove", (e) => {
   }
 });
 
-window.addEventListener("storage", () => {
-  products = loadProducts();
-  renderProducts();
-  renderBestSellers();
+window.addEventListener("storage", (event) => {
+  if (event.key === CART_KEY) {
+    state.cart = safeReadArray(CART_KEY);
+    updateCart();
+  }
+
+  if (event.key === FAVORITES_KEY) {
+    state.favorites = safeReadArray(FAVORITES_KEY);
+    updateFavorites();
+    renderProducts();
+  }
+
+  if (event.key === STORAGE_KEY) {
+    products = loadProductsFromLocal();
+    renderProducts();
+    renderBestSellers();
+  }
 });
 
-renderProducts();
-renderBestSellers();
-updateCart();
-updateFavorites();
-revealOnScroll();
+function normalizeProduct(raw, fallbackId = Date.now()) {
+  return {
+    id: Number(raw.id ?? fallbackId),
+    name: raw.name || "Produto sem nome",
+    category: raw.category || "camisetas",
+    price: Number(raw.price || 0),
+    oldPrice: raw.oldPrice !== undefined && raw.oldPrice !== null && raw.oldPrice !== ""
+      ? Number(raw.oldPrice)
+      : null,
+    sale: raw.sale || "",
+    description: raw.description || "Peça premium com visual sofisticado, masculino e contemporâneo.",
+    image: raw.image || "",
+    featured: Boolean(raw.featured),
+    bestseller: Boolean(raw.bestseller)
+  };
+}
+
+function listenProductsFromFirestore() {
+  try {
+    onSnapshot(
+      collection(db, "produtos"),
+      (snapshot) => {
+        if (snapshot.empty) {
+          products = loadProductsFromLocal();
+        } else {
+          const firestoreProducts = snapshot.docs
+            .map((docSnap, index) => normalizeProduct(docSnap.data(), index + 1))
+            .sort((a, b) => b.id - a.id);
+
+          products = firestoreProducts;
+          saveProducts(products);
+        }
+
+        renderProducts();
+        renderBestSellers();
+        revealOnScroll();
+      },
+      (error) => {
+        console.error("Erro ao ouvir produtos do Firestore:", error);
+        products = loadProductsFromLocal();
+        renderProducts();
+        renderBestSellers();
+      }
+    );
+  } catch (error) {
+    console.error("Erro ao iniciar listener do Firestore:", error);
+    products = loadProductsFromLocal();
+    renderProducts();
+    renderBestSellers();
+  }
+}
+
+function init() {
+  renderProducts();
+  renderBestSellers();
+  updateCart();
+  updateFavorites();
+  revealOnScroll();
+  listenProductsFromFirestore();
+}
+
+init();
 
 window.buyNow = buyNow;
 window.addToCart = addToCart;

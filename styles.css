@@ -1235,3 +1235,37 @@ textarea {
   object-fit: cover;
   display: block;
 }
+.google-login-wrap {
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.google-login-text {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.72);
+  font-size: 15px;
+  line-height: 1.6;
+}
+
+#googleLoginArea {
+  width: 100%;
+}
+.google-login-wrap {
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.google-login-text {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.72);
+  font-size: 15px;
+  line-height: 1.6;
+}
+
+#googleLoginArea {
+  width: 100%;
+}
