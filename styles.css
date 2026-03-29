@@ -1269,3 +1269,131 @@ textarea {
 #googleLoginArea {
   width: 100%;
 }
+.mobile-login-btn {
+  width: 100%;
+  min-height: 46px;
+  border: 1px solid rgba(255,255,255,0.1);
+  background: rgba(255,255,255,0.04);
+  color: #fff;
+  border-radius: 14px;
+  padding: 12px 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.3s ease;
+}
+
+.mobile-login-btn:hover {
+  background: rgba(255,255,255,0.08);
+}
+
+@media (max-width: 768px) {
+  .mobile-login-btn {
+    display: block;
+  }
+}
+.welcome-popup {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.72);
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  z-index: 1400;
+  opacity: 0;
+  visibility: hidden;
+  transition: 0.35s ease;
+}
+
+.welcome-popup.show {
+  opacity: 1;
+  visibility: visible;
+}
+
+.welcome-popup-box {
+  width: min(100%, 520px);
+  position: relative;
+  padding: 34px 28px 28px;
+  border-radius: 26px;
+  background: linear-gradient(145deg, rgba(255,255,255,0.08), rgba(255,255,255,0.03));
+  border: 1px solid rgba(255,255,255,0.12);
+  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.5);
+  overflow: hidden;
+}
+
+.welcome-popup-box::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at top left, rgba(255,255,255,0.10), transparent 35%);
+  pointer-events: none;
+}
+
+.welcome-badge {
+  display: inline-flex;
+  margin-bottom: 16px;
+  padding: 8px 14px;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,0.12);
+  background: rgba(255,255,255,0.06);
+  font-size: 12px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: #fff;
+}
+
+.welcome-popup-box h2 {
+  font-family: "Cormorant Garamond", serif;
+  font-size: clamp(2rem, 4vw, 3rem);
+  line-height: 1;
+  margin-bottom: 14px;
+  color: #fff;
+}
+
+.welcome-popup-box p {
+  color: rgba(255,255,255,0.72);
+  font-size: 15px;
+  line-height: 1.7;
+  margin-bottom: 24px;
+}
+
+.welcome-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.welcome-close {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  width: 42px;
+  height: 42px;
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 12px;
+  background: rgba(255,255,255,0.04);
+  color: #fff;
+  cursor: pointer;
+  transition: 0.3s ease;
+}
+
+.welcome-close:hover {
+  background: rgba(255,255,255,0.08);
+  transform: translateY(-2px);
+}
+
+@media (max-width: 768px) {
+  .welcome-popup-box {
+    padding: 30px 20px 22px;
+    border-radius: 22px;
+  }
+
+  .welcome-popup-box h2 {
+    font-size: 2rem;
+  }
+
+  .welcome-popup-box p {
+    font-size: 14px;
+  }
+}
