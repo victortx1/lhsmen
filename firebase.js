@@ -9,7 +9,7 @@ import {
 
 const firebaseConfig = {
   apiKey: "AIzaSyDHMuEZVIzlQ9xSDM2nThZUB75EthZZ46Y",
-  authDomain: "lhsmen.vercel.app",
+  authDomain: "lhs-men.firebaseapp.com",
   projectId: "lhs-men",
   storageBucket: "lhs-men.firebasestorage.app",
   messagingSenderId: "1046262755270",
