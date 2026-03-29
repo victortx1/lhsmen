@@ -4,6 +4,12 @@ import {
   onSnapshot
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
+import {
+  loginWithGoogle,
+  handleRedirectLogin,
+  monitorAuth
+} from "./auth.js";
+
 const STORAGE_KEY = "lhsmen_products";
 const CART_KEY = "lhsmen_cart";
 const FAVORITES_KEY = "lhsmen_favorites";
@@ -494,7 +500,7 @@ document.getElementById("favoritesToggle")?.addEventListener("click", () => {
   openPanel("favoritesPanel");
 });
 
-document.querySelectorAll("[data-close]").forEach((button) => {
+document.querySelectorAll("[data-close]")?.forEach((button) => {
   button.addEventListener("click", closePanels);
 });
 
@@ -506,6 +512,31 @@ document.getElementById("searchToggle")?.addEventListener("click", () => {
 
 document.getElementById("menuToggle")?.addEventListener("click", () => {
   document.getElementById("mobileNav")?.classList.toggle("open");
+});
+
+document.getElementById("googleLoginBtn")?.addEventListener("click", async () => {
+  await loginWithGoogle();
+});
+
+document.getElementById("loginToggle")?.addEventListener("click", async () => {
+  const isLogged = document.getElementById("loginToggle")?.getAttribute("data-logged");
+
+  if (!isLogged) {
+    await loginWithGoogle();
+  } else {
+    window.location.href = "perfil.html";
+  }
+});
+
+document.getElementById("mobileLoginToggle")?.addEventListener("click", async () => {
+  const isLogged = document.getElementById("loginToggle")?.getAttribute("data-logged");
+
+  if (!isLogged) {
+    document.getElementById("mobileNav")?.classList.remove("open");
+    await loginWithGoogle();
+  } else {
+    window.location.href = "perfil.html";
+  }
 });
 
 document.getElementById("searchInput")?.addEventListener("input", (e) => {
@@ -669,7 +700,9 @@ function listenProductsFromFirestore() {
   }
 }
 
-function init() {
+async function init() {
+  await handleRedirectLogin();
+  monitorAuth();
   renderProducts();
   renderBestSellers();
   updateCart();
