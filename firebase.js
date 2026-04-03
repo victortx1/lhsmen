@@ -1,9 +1,6 @@
-import { initializeApp, getApps, getApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getAuth } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import { getFirestore } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-import {
-  getAuth,
-  GoogleAuthProvider
-} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyDHMuEZVIzlQ9xSDM2nThZUB75EthZZ46Y",
@@ -14,15 +11,7 @@ const firebaseConfig = {
   appId: "1:1046262755270:web:97b7f07c2dca01d6b20cc7"
 };
 
-const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
-const db = getFirestore(app);
-const auth = getAuth(app);
-const googleProvider = new GoogleAuthProvider();
+const app = initializeApp(firebaseConfig);
 
-googleProvider.setCustomParameters({
-  prompt: "select_account"
-});
-
-auth.languageCode = "pt-BR";
-
-export { app, db, auth, googleProvider };
+export const auth = getAuth(app);
+export const db = getFirestore(app);

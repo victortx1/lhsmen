@@ -135,6 +135,104 @@
         </form>
       </section>
 
+ <section class="panel" id="novidades">
+  <div class="panel-header">
+    <h3>Editar novidades</h3>
+  </div>
+
+  <div class="product-form">
+    <div class="input-group">
+      <label>Título da seção</label>
+      <input type="text" id="admNovidadesTitulo" placeholder="Título da seção">
+    </div>
+
+    <div class="input-group">
+      <label>Descrição da seção</label>
+      <textarea id="admNovidadesDescricao" rows="3" placeholder="Descrição da seção"></textarea>
+    </div>
+
+    <div class="grid two">
+      <div class="input-group">
+        <label>Badge card 1</label>
+        <input type="text" id="card1Badge" placeholder="Ex: NEW IN">
+      </div>
+      <div class="input-group">
+        <label>Título card 1</label>
+        <input type="text" id="card1Titulo" placeholder="Título">
+      </div>
+
+      <h3>Card 1</h3>
+<input type="text" id="card1Badge" placeholder="Badge">
+<input type="text" id="card1Titulo" placeholder="Título">
+<textarea id="card1Texto" placeholder="Texto"></textarea>
+
+<label for="card1ImageFile">Imagem do card 1</label>
+<input type="file" id="card1ImageFile" accept="image/*">
+<input type="hidden" id="card1Image">
+<div id="card1ImagePreview">Sem imagem</div>
+    </div>
+
+    <div class="input-group">
+      <label>Texto card 1</label>
+      <textarea id="card1Texto" rows="3" placeholder="Texto"></textarea>
+    </div>
+
+    <div class="grid two">
+      <div class="input-group">
+        <label>Badge card 2</label>
+        <input type="text" id="card2Badge" placeholder="Badge">
+      </div>
+      <div class="input-group">
+        <label>Título card 2</label>
+        <input type="text" id="card2Titulo" placeholder="Título">
+      </div>
+      <h3>Card 2</h3>
+<input type="text" id="card2Badge" placeholder="Badge">
+<input type="text" id="card2Titulo" placeholder="Título">
+<textarea id="card2Texto" placeholder="Texto"></textarea>
+
+<label for="card2ImageFile">Imagem do card 2</label>
+<input type="file" id="card2ImageFile" accept="image/*">
+<input type="hidden" id="card2Image">
+<div id="card2ImagePreview">Sem imagem</div>
+    </div>
+
+    <div class="input-group">
+      <label>Texto card 2</label>
+      <textarea id="card2Texto" rows="3" placeholder="Texto"></textarea>
+    </div>
+
+    <div class="grid two">
+      <div class="input-group">
+        <label>Badge card 3</label>
+        <input type="text" id="card3Badge" placeholder="Badge">
+      </div>
+      <div class="input-group">
+        <label>Título card 3</label>
+        <input type="text" id="card3Titulo" placeholder="Título">
+      </div>
+      <h3>Card 3</h3>
+<input type="text" id="card3Badge" placeholder="Badge">
+<input type="text" id="card3Titulo" placeholder="Título">
+<textarea id="card3Texto" placeholder="Texto"></textarea>
+
+<label for="card3ImageFile">Imagem do card 3</label>
+<input type="file" id="card3ImageFile" accept="image/*">
+<input type="hidden" id="card3Image">
+<div id="card3ImagePreview">Sem imagem</div>
+    </div>
+
+    <div class="input-group">
+      <label>Texto card 3</label>
+      <textarea id="card3Texto" rows="3" placeholder="Texto"></textarea>
+    </div>
+
+    <div class="form-actions">
+      <button type="button" class="primary-btn" onclick="salvarNovidades()">Salvar novidades</button>
+    </div>
+  </div>
+</section>
+
       <section class="panel" id="produtos">
         <div class="panel-header">
           <h3>Produtos cadastrados</h3>
@@ -161,25 +259,18 @@
     </main>
   </div>
 
-  <script type="module">
-  import { auth } from "./firebase.js";
-  import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+  <script>
+    const ADMIN_PASSWORD = "getluissilva";
 
-  const OWNER_EMAILS = ["victoj796@gmail.com"];
+    const typedPassword = prompt("Digite a senha do painel ADM:");
 
-  onAuthStateChanged(auth, (user) => {
-    const email = (user?.email || "").toLowerCase();
-    const isOwner = OWNER_EMAILS.includes(email);
-
-    if (!user || !isOwner) {
-      alert("Acesso restrito. Apenas os donos podem entrar no painel administrativo.");
+    if (typedPassword === ADMIN_PASSWORD) {
+      document.body.style.display = "block";
+    } else {
+      alert("Senha incorreta.");
       window.location.href = "index.html";
-      return;
     }
-
-    document.body.style.display = "block";
-  });
-</script>
+  </script>
 
   <script type="module" src="admin.js"></script>
 </body>

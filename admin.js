@@ -4,10 +4,12 @@ import {
   doc,
   setDoc,
   deleteDoc,
-  getDocs
+  getDocs,
+  getDoc
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const STORAGE_KEY = "lhsmen_products";
+const NOVIDADES_DOC_ID = "principal";
 
 const defaultProducts = [
   {
@@ -35,6 +37,33 @@ const defaultProducts = [
     bestseller: true
   }
 ];
+
+function getDefaultNovidades() {
+  return {
+    titulo: "Novidades",
+    descricao: "Novos produtos, novas combinações e novas referências de estilo masculino.",
+    cards: [
+      {
+        badge: "NEW IN",
+        titulo: "Drop monocromático com caimento premium",
+        texto: "Uma estética forte, moderna e limpa para elevar sua presença.",
+        image: ""
+      },
+      {
+        badge: "",
+        titulo: "Essenciais em preto absoluto",
+        texto: "Versatilidade, elegância e composição de looks com alto impacto visual.",
+        image: ""
+      },
+      {
+        badge: "",
+        titulo: "Acessórios discretos, presença máxima",
+        texto: "Peças que complementam o look com sofisticação e identidade.",
+        image: ""
+      }
+    ]
+  };
+}
 
 function saveProductsLocal(list) {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(list));
@@ -93,13 +122,15 @@ function getCategoryLabel(category) {
 }
 
 function updateStats() {
-  totalProducts.textContent = products.length;
-  totalFeatured.textContent = products.filter((p) => p.featured).length;
-  totalBestsellers.textContent = products.filter((p) => p.bestseller).length;
-  totalSales.textContent = products.filter((p) => p.sale && p.sale.trim() !== "").length;
+  if (totalProducts) totalProducts.textContent = products.length;
+  if (totalFeatured) totalFeatured.textContent = products.filter((p) => p.featured).length;
+  if (totalBestsellers) totalBestsellers.textContent = products.filter((p) => p.bestseller).length;
+  if (totalSales) totalSales.textContent = products.filter((p) => p.sale && p.sale.trim() !== "").length;
 }
 
 function renderPreview(url) {
+  if (!imagePreview) return;
+
   if (!url || !url.trim()) {
     imagePreview.innerHTML = "Sem imagem";
     return;
@@ -109,6 +140,8 @@ function renderPreview(url) {
 }
 
 function renderTable() {
+  if (!productTableBody) return;
+
   if (!products.length) {
     productTableBody.innerHTML = `
       <tr>
@@ -120,6 +153,7 @@ function renderTable() {
   }
 
   productTableBody.innerHTML = products
+    .slice()
     .sort((a, b) => b.id - a.id)
     .map((product) => `
       <tr>
@@ -156,10 +190,15 @@ function renderTable() {
 }
 
 function resetForm() {
+  if (!productForm) return;
+
   productForm.reset();
-  document.getElementById("productId").value = "";
-  formTitle.textContent = "Cadastrar novo produto";
-  imageInput.value = "";
+
+  const productId = document.getElementById("productId");
+  if (productId) productId.value = "";
+
+  if (formTitle) formTitle.textContent = "Cadastrar novo produto";
+  if (imageInput) imageInput.value = "";
 
   if (imageFileInput) {
     imageFileInput.value = "";
@@ -187,7 +226,7 @@ function editProduct(id) {
     imageFileInput.value = "";
   }
 
-  formTitle.textContent = "Editando produto";
+  if (formTitle) formTitle.textContent = "Editando produto";
   renderPreview(product.image || "");
   window.scrollTo({ top: 0, behavior: "smooth" });
 }
@@ -232,6 +271,11 @@ async function loadProductsFromFirestore() {
 
     if (snapshot.empty) {
       products = loadProductsLocal();
+
+      for (const product of products) {
+        await setDoc(doc(db, "produtos", String(product.id)), product);
+      }
+
       renderTable();
       return;
     }
@@ -244,9 +288,12 @@ async function loadProductsFromFirestore() {
           name: data.name || "Produto sem nome",
           category: data.category || "camisetas",
           price: Number(data.price || 0),
-          oldPrice: data.oldPrice !== undefined && data.oldPrice !== null && data.oldPrice !== ""
-            ? Number(data.oldPrice)
-            : null,
+          oldPrice:
+            data.oldPrice !== undefined &&
+            data.oldPrice !== null &&
+            data.oldPrice !== ""
+              ? Number(data.oldPrice)
+              : null,
           sale: data.sale || "",
           description: data.description || "",
           image: data.image || "",
@@ -369,8 +416,142 @@ if (resetAllBtn) {
   });
 }
 
+function renderNovidadeImagePreview(previewId, imageUrl) {
+  const preview = document.getElementById(previewId);
+  if (!preview) return;
+
+  if (!imageUrl) {
+    preview.innerHTML = "Sem imagem";
+    return;
+  }
+
+  preview.innerHTML = `<img src="${imageUrl}" alt="Prévia" style="width:120px;height:120px;object-fit:cover;border-radius:12px;">`;
+}
+
+function setupNovidadeImageUpload(fileInputId, hiddenInputId, previewId) {
+  const fileInput = document.getElementById(fileInputId);
+  const hiddenInput = document.getElementById(hiddenInputId);
+
+  if (!fileInput || !hiddenInput) return;
+
+  fileInput.addEventListener("change", (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+      alert("Escolha apenas arquivos de imagem.");
+      fileInput.value = "";
+      return;
+    }
+
+    if (file.size > 700 * 1024) {
+      alert("A imagem está muito grande. Escolha uma imagem menor que 700KB.");
+      fileInput.value = "";
+      return;
+    }
+
+    const reader = new FileReader();
+
+    reader.onload = function (e) {
+      const base64 = e.target.result;
+      hiddenInput.value = base64;
+      renderNovidadeImagePreview(previewId, base64);
+    };
+
+    reader.onerror = function () {
+      alert("Erro ao carregar a imagem.");
+    };
+
+    reader.readAsDataURL(file);
+  });
+}
+
+async function preencherFormularioNovidades() {
+  try {
+    const ref = doc(db, "novidades", NOVIDADES_DOC_ID);
+    const snap = await getDoc(ref);
+
+    let data;
+
+    if (snap.exists()) {
+      data = snap.data();
+    } else {
+      data = getDefaultNovidades();
+      await setDoc(ref, data);
+    }
+
+    document.getElementById("admNovidadesTitulo").value = data.titulo || "";
+    document.getElementById("admNovidadesDescricao").value = data.descricao || "";
+
+    document.getElementById("card1Badge").value = data.cards?.[0]?.badge || "";
+    document.getElementById("card1Titulo").value = data.cards?.[0]?.titulo || "";
+    document.getElementById("card1Texto").value = data.cards?.[0]?.texto || "";
+    document.getElementById("card1Image").value = data.cards?.[0]?.image || "";
+
+    document.getElementById("card2Badge").value = data.cards?.[1]?.badge || "";
+    document.getElementById("card2Titulo").value = data.cards?.[1]?.titulo || "";
+    document.getElementById("card2Texto").value = data.cards?.[1]?.texto || "";
+    document.getElementById("card2Image").value = data.cards?.[1]?.image || "";
+
+    document.getElementById("card3Badge").value = data.cards?.[2]?.badge || "";
+    document.getElementById("card3Titulo").value = data.cards?.[2]?.titulo || "";
+    document.getElementById("card3Texto").value = data.cards?.[2]?.texto || "";
+    document.getElementById("card3Image").value = data.cards?.[2]?.image || "";
+
+    renderNovidadeImagePreview("card1ImagePreview", data.cards?.[0]?.image || "");
+    renderNovidadeImagePreview("card2ImagePreview", data.cards?.[1]?.image || "");
+    renderNovidadeImagePreview("card3ImagePreview", data.cards?.[2]?.image || "");
+  } catch (error) {
+    console.error("Erro ao carregar novidades:", error);
+    alert("Erro ao carregar novidades do Firestore.");
+  }
+}
+
+async function salvarNovidades() {
+  const novidades = {
+    titulo: document.getElementById("admNovidadesTitulo").value.trim(),
+    descricao: document.getElementById("admNovidadesDescricao").value.trim(),
+    cards: [
+      {
+        badge: document.getElementById("card1Badge").value.trim(),
+        titulo: document.getElementById("card1Titulo").value.trim(),
+        texto: document.getElementById("card1Texto").value.trim(),
+        image: document.getElementById("card1Image").value.trim()
+      },
+      {
+        badge: document.getElementById("card2Badge").value.trim(),
+        titulo: document.getElementById("card2Titulo").value.trim(),
+        texto: document.getElementById("card2Texto").value.trim(),
+        image: document.getElementById("card2Image").value.trim()
+      },
+      {
+        badge: document.getElementById("card3Badge").value.trim(),
+        titulo: document.getElementById("card3Titulo").value.trim(),
+        texto: document.getElementById("card3Texto").value.trim(),
+        image: document.getElementById("card3Image").value.trim()
+      }
+    ]
+  };
+
+  try {
+    await setDoc(doc(db, "novidades", NOVIDADES_DOC_ID), novidades);
+    alert("Novidades salvas com sucesso.");
+  } catch (error) {
+    console.error("Erro ao salvar novidades:", error);
+    alert("Erro ao salvar novidades no Firestore.");
+  }
+}
+
 renderPreview("");
 loadProductsFromFirestore();
 
+document.addEventListener("DOMContentLoaded", () => {
+  preencherFormularioNovidades();
+  setupNovidadeImageUpload("card1ImageFile", "card1Image", "card1ImagePreview");
+  setupNovidadeImageUpload("card2ImageFile", "card2Image", "card2ImagePreview");
+  setupNovidadeImageUpload("card3ImageFile", "card3Image", "card3ImagePreview");
+});
+
 window.editProduct = editProduct;
 window.deleteProduct = deleteProduct;
+window.salvarNovidades = salvarNovidades;
