@@ -1371,10 +1371,8 @@
 
       <nav class="desktop-nav">
         <a href="#home">Início</a>
-        <a href="#lancamentos">Lançamentos</a>
         <a href="#loja">Loja</a>
         <a href="#novidades">Novidades</a>
-        <a href="#looks">Looks</a>
         <a href="#faq">FAQ</a>
         <a href="#contato">Contato</a>
       </nav>
@@ -1396,13 +1394,9 @@
 
     <div class="mobile-nav" id="mobileNav">
       <a href="#home">Início</a>
-      <a href="#lancamentos">Lançamentos</a>
       <a href="#loja">Loja</a>
-      <a href="#promocoes">Promoções</a>
       <a href="#mais-vendidos">Mais vendidos</a>
       <a href="#novidades">Novidades</a>
-      <a href="#looks">Looks</a>
-      <a href="#sobre">Sobre nós</a>
       <a href="#faq">FAQ</a>
       <a href="#contato">Contato</a>
     </div>
@@ -1424,7 +1418,7 @@
 
           <div class="hero-actions">
             <a href="#loja" class="btn btn-light">Explorar coleção</a>
-            <a href="#lancamentos" class="btn btn-outline">Ver lançamentos</a>
+            <a href="#mais-vendidos" class="btn btn-outline">Mais vendidos</a>
           </div>
 
           <div class="hero-stats">
@@ -1458,14 +1452,14 @@
 
     <section class="marquee">
       <div class="marquee-track">
-        <span>MODA PREMIUM</span>
-        <span>ESTILO MASCULINO</span>
-        <span>PRESENÇA</span>
-        <span>SOFISTICAÇÃO</span>
         <span>LHS MEN</span>
-        <span>MODA PREMIUM</span>
-        <span>ESTILO MASCULINO</span>
-        <span>PRESENÇA</span>
+        <span>LHS MEN</span>
+        <span>LHS MEN</span>
+        <span>LHS MEN</span>
+        <span>LHS MEN</span>
+        <span>LHS MEN</span>
+        <span>LHS MEN</span>
+        <span>LHS MEN</span>
       </div>
     </section>
 
@@ -1513,9 +1507,6 @@
     <section class="section" id="promocoes">
       <div class="container">
         <div class="section-head reveal">
-          <p class="section-kicker">preços especiais</p>
-          <h2>Promoções</h2>
-          <p>Descontos destacados com selo visual elegante e loja organizada.</p>
         </div>
 
         <div class="promo-strip reveal">
@@ -1547,11 +1538,9 @@
           <div class="filters">
             <button class="filter-btn active" data-filter="all" type="button">Todos</button>
             <button class="filter-btn" data-filter="camisetas" type="button">Camisetas</button>
-            <button class="filter-btn" data-filter="calcas" type="button">Calças</button>
             <button class="filter-btn" data-filter="bermudas" type="button">Bermudas</button>
             <button class="filter-btn" data-filter="jaquetas" type="button">Jaquetas</button>
             <button class="filter-btn" data-filter="acessorios" type="button">Acessórios</button>
-            <button class="filter-btn" data-filter="tenis" type="button">Tênis</button>
           </div>
         </div>
 
@@ -1664,7 +1653,6 @@
       <div>
         <h4>Links úteis</h4>
         <a href="#loja">Loja</a>
-        <a href="#sobre">Sobre nós</a>
         <a href="#faq">FAQ</a>
       </div>
 
@@ -1673,14 +1661,13 @@
         <a href="#loja">Camisetas</a>
         <a href="#loja">Calças</a>
         <a href="#loja">Jaquetas</a>
-        <a href="#loja">Tênis</a>
       </div>
 
       <div>
         <h4>Contato</h4>
         <a href="#contato">Atendimento</a>
-        <a href="#">Termos de uso</a>
-        <a href="#">Privacidade</a>
+        <a href="termos.html">Termos de uso</a>
+        <a href="privacidade.html">Privacidade</a>
         <a href="admin.html">Admin</a>
       </div>
     </div>
@@ -2234,5 +2221,72 @@
     }
   });
 </script>
+
+<!-- 🍪 COOKIE BANNER -->
+<div id="cookieBanner" class="cookie-banner">
+  <p>
+    Usamos cookies para melhorar sua experiência. Ao continuar, você concorda com nossa 
+    <a href="./termos/privacidade.html">Política de Privacidade</a>.
+  </p>
+  <button onclick="acceptCookies()">Aceitar</button>
+</div>
+
+<style>
+.cookie-banner {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(15,15,15,0.95);
+  color: #fff;
+  padding: 15px 20px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  z-index: 9999;
+  max-width: 90%;
+  box-shadow: 0 0 20px rgba(0,0,0,0.5);
+}
+
+.cookie-banner p {
+  margin: 0;
+  font-size: 14px;
+  color: #ccc;
+}
+
+.cookie-banner a {
+  color: #fff;
+  text-decoration: underline;
+}
+
+.cookie-banner button {
+  background: #fff;
+  color: #000;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.cookie-banner button:hover {
+  opacity: 0.8;
+}
+</style>
+
+<script>
+function acceptCookies() {
+  localStorage.setItem("cookiesAccepted", "true");
+  document.getElementById("cookieBanner").style.display = "none";
+}
+
+window.onload = function() {
+  if (localStorage.getItem("cookiesAccepted")) {
+    document.getElementById("cookieBanner").style.display = "none";
+  }
+};
+</script>
+
 </body>
 </html>
