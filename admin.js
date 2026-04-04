@@ -81,8 +81,7 @@ function loadProductsLocal() {
     }
   }
 
-  saveProductsLocal(defaultProducts);
-  return [...defaultProducts];
+  return [];
 }
 
 let products = loadProductsLocal();
