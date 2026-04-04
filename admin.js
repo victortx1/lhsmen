@@ -235,15 +235,20 @@ async function deleteProduct(id) {
   if (!confirmDelete) return;
 
   try {
-    await deleteDoc(doc(db, "produtos", String(id)));
-    products = products.filter((product) => product.id !== id);
+    const numericId = Number(id);
+
+    await deleteDoc(doc(db, "produtos", String(numericId)));
+
+    products = products.filter((product) => Number(product.id) !== numericId);
+
     saveProductsLocal(products);
     renderTable();
     resetForm();
+
     alert("Produto excluído com sucesso.");
   } catch (error) {
     console.error("Erro ao excluir produto:", error);
-    alert("Erro ao excluir produto no Firestore.");
+    alert("Erro ao excluir produto no Firestore. Veja o console.");
   }
 }
 
